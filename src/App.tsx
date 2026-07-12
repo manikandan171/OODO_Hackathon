@@ -37,8 +37,11 @@ import TripsView from "./components/TripsView";
 import MaintenanceView from "./components/MaintenanceView";
 import FuelExpensesView from "./components/FuelExpensesView";
 import ReportsView from "./components/ReportsView";
+import { useLanguage } from "./LanguageContext";
+
 
 export default function App() {
+  const { language, setLanguage, t } = useLanguage();
   const [activeRole, setActiveRole] = useState<Role>(Role.FLEET_MANAGER);
   const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
@@ -319,12 +322,12 @@ export default function App() {
       {/* 1. Global Interactive Role Switcher Header bar */}
       <div className="sticky top-0 bg-slate-900 text-white z-40 px-4 py-2.5 flex flex-col md:flex-row justify-between items-center gap-3 border-b border-slate-800 shadow-lg">
         <div className="flex items-center gap-3 shrink-0">
-          <div className="p-2 bg-blue-600 rounded-lg text-white">
+          <div className="p-2 bg-blue-600 rounded-lg text-white shadow-md animate-pulse">
             <Truck className="w-5 h-5" />
           </div>
           <div>
-            <span className="font-extrabold text-base tracking-tight font-sans block">TransitOps</span>
-            <span className="text-[10px] text-slate-400 block font-medium">Enterprise Fleet Optimization Command</span>
+            <span className="font-extrabold text-base tracking-tight font-display block">{t("app_title")}</span>
+            <span className="text-[10px] text-slate-400 block font-medium">{t("app_subtitle")}</span>
           </div>
         </div>
 
@@ -335,7 +338,7 @@ export default function App() {
             <input
               id="global-search-input"
               type="text"
-              placeholder="Search vehicles, drivers, or trips by ID or name..."
+              placeholder={t("trip_search_placeholder")}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -490,61 +493,75 @@ export default function App() {
         </div>
 
         {/* Role Select Buttons */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs font-bold text-slate-400 mr-1.5 hidden lg:inline">Active Persona Switcher:</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-bold text-slate-400 mr-1 hidden lg:inline">{t("persona_switcher")}</span>
           
           <button
             id="role-mgr"
             onClick={() => handleRoleChange(Role.FLEET_MANAGER)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all smooth-hover cursor-pointer ${
               activeRole === Role.FLEET_MANAGER
-                ? "bg-blue-600 text-white border-blue-500 shadow-sm"
-                : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
+                ? "bg-blue-600 text-white border-blue-500 shadow-md scale-102"
+                : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white"
             }`}
           >
-            💼 Fleet Manager
+            💼 {t("role_fleet_manager")}
           </button>
 
           <button
             id="role-disp"
             onClick={() => handleRoleChange(Role.DISPATCHER)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all smooth-hover cursor-pointer ${
               activeRole === Role.DISPATCHER
-                ? "bg-indigo-600 text-white border-indigo-500 shadow-sm"
-                : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
+                ? "bg-indigo-600 text-white border-indigo-500 shadow-md scale-102"
+                : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white"
             }`}
           >
-            🧭 Dispatcher
+            🧭 {t("role_dispatcher")}
           </button>
 
           <button
             id="role-safety"
             onClick={() => handleRoleChange(Role.SAFETY_OFFICER)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all smooth-hover cursor-pointer ${
               activeRole === Role.SAFETY_OFFICER
-                ? "bg-violet-600 text-white border-violet-500 shadow-sm"
-                : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
+                ? "bg-violet-600 text-white border-violet-500 shadow-md scale-102"
+                : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white"
             }`}
           >
-            🛡️ Safety Officer
+            🛡️ {t("role_safety_officer")}
           </button>
 
           <button
             id="role-finance"
             onClick={() => handleRoleChange(Role.FINANCIAL_ANALYST)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all smooth-hover cursor-pointer ${
               activeRole === Role.FINANCIAL_ANALYST
-                ? "bg-emerald-600 text-white border-emerald-500 shadow-sm"
-                : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
+                ? "bg-emerald-600 text-white border-emerald-500 shadow-md scale-102"
+                : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white"
             }`}
           >
-            📊 Financial Analyst
+            📊 {t("role_financial_analyst")}
           </button>
+
+          {/* Language Switcher */}
+          <div className="relative ml-1 flex items-center bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 select-none">
+            <span className="text-[10px] text-slate-400 font-bold uppercase mr-1">🌐</span>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as any)}
+              className="bg-transparent text-slate-200 text-xs font-bold focus:outline-none cursor-pointer hover:text-white transition"
+            >
+              <option value="en" className="bg-slate-900 text-white">EN</option>
+              <option value="ta" className="bg-slate-900 text-white">தமிழ்</option>
+              <option value="es" className="bg-slate-900 text-white">ES</option>
+            </select>
+          </div>
 
           <button
             onClick={loadData}
-            title="Sync Database"
-            className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg transition shrink-0 ml-1 cursor-pointer"
+            title={t("sync_db")}
+            className="p-1.5 bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-300 border border-slate-700 rounded-lg transition shrink-0 ml-1 cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
           </button>
@@ -555,8 +572,7 @@ export default function App() {
       <div className="flex-1 flex">
         {/* Dynamic Sidebar */}
         <aside className={`bg-slate-900 border-r border-slate-800 text-slate-400 w-64 flex flex-col transition-all shrink-0 ${sidebarOpen ? "block" : "hidden md:block"}`}>
-          {/* Sidebar Menu Items */}
-          <nav className="flex-1 px-3 py-4 space-y-1">
+            <nav className="flex-1 px-3 py-4 space-y-1">
             {navigationItems.map((item) => {
               const Icon = item.icon;
               const isSelected = activeTab === item.id;
@@ -570,27 +586,27 @@ export default function App() {
                     setSearchQuery("");
                     setGlobalSearchQuery("");
                   }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition cursor-pointer ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all smooth-hover cursor-pointer ${
                     isSelected
-                      ? "bg-blue-600 text-white shadow-sm"
+                      ? "bg-blue-600 text-white shadow-md scale-102 font-bold"
                       : "hover:bg-slate-800 hover:text-slate-200"
                   }`}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.label}</span>
+                  <span>{t("tab_" + item.id)}</span>
                 </button>
               );
             })}
           </nav>
 
           {/* Connected Database Footer in Sidebar */}
-          <div className="p-4 border-t border-slate-800 text-xs flex flex-col gap-2">
+          <div className="p-4 border-t border-slate-800 text-xs flex flex-col gap-2 bg-slate-950/20">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-              <span className="font-semibold text-slate-400">TransitOps Server</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="font-semibold text-slate-300">{t("connected_server")}</span>
             </div>
             <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-              API connections check and transaction guards run atomically on Node/Express server.
+              {t("server_details")}
             </p>
           </div>
         </aside>
@@ -598,12 +614,12 @@ export default function App() {
         {/* Primary Views Stage canvas */}
         <main className="flex-1 p-6 md:p-8 overflow-y-auto">
           {isLoading && vehicles.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-slate-400">
+            <div className="flex flex-col items-center justify-center py-24 text-slate-400 animate-pulse">
               <RefreshCw className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-              <p className="text-sm font-semibold">Synchronizing Logistics Database...</p>
+              <p className="text-sm font-semibold">{t("syncing_db")}</p>
             </div>
           ) : (
-            <div className="max-w-7xl mx-auto animate-in fade-in duration-300">
+            <div className="max-w-7xl mx-auto animate-fade-in-up">
               {activeTab === "dashboard" && (
                 <DashboardView
                   kpis={kpis}

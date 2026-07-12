@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Download, FileText, BarChart3, HelpCircle, DollarSign, Fuel, TrendingUp, Navigation, Scale } from "lucide-react";
 import { Role, VehicleReport } from "../types";
+import { useLanguage } from "../LanguageContext";
 
 interface ReportsViewProps {
   analyticsReport: VehicleReport[];
@@ -11,6 +12,7 @@ export default function ReportsView({
   analyticsReport,
   activeRole
 }: ReportsViewProps) {
+  const { t } = useLanguage();
   const [reportType, setReportType] = useState<"EFFICIENCY" | "COST" | "ROI">("EFFICIENCY");
 
   // Export CSV functionality
@@ -70,20 +72,18 @@ export default function ReportsView({
     document.body.removeChild(link);
   };
 
-  const isFinancialOrManager = activeRole === Role.FLEET_MANAGER || activeRole === Role.FINANCIAL_ANALYST;
-
   return (
     <div className="space-y-6">
       {/* Header and Download Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Logistics Intelligence & Analytics</h1>
-          <p className="text-sm text-slate-500 mt-1">Audit fleet performance reports, operational cost journals, and ROI logs.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("rep_title")}</h1>
+          <p className="text-sm text-slate-500 mt-1">{t("rep_subtitle")}</p>
         </div>
         <button
           id="export-csv-btn"
           onClick={handleExportCSV}
-          className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer"
+          className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-xs smooth-hover cursor-pointer"
         >
           <Download className="w-4 h-4" /> Export to CSV
         </button>
@@ -93,7 +93,7 @@ export default function ReportsView({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button
           onClick={() => setReportType("EFFICIENCY")}
-          className={`text-left p-5 rounded-2xl border transition-all hover:border-slate-300 flex items-start gap-4 ${
+          className={`text-left p-5 rounded-2xl border transition-all smooth-hover cursor-pointer flex items-start gap-4 ${
             reportType === "EFFICIENCY" 
               ? "bg-blue-50/20 border-blue-200 text-blue-900 custom-glow" 
               : "bg-white border-slate-100 text-slate-700"
@@ -110,7 +110,7 @@ export default function ReportsView({
 
         <button
           onClick={() => setReportType("COST")}
-          className={`text-left p-5 rounded-2xl border transition-all hover:border-slate-300 flex items-start gap-4 ${
+          className={`text-left p-5 rounded-2xl border transition-all smooth-hover cursor-pointer flex items-start gap-4 ${
             reportType === "COST" 
               ? "bg-blue-50/20 border-blue-200 text-blue-900 custom-glow" 
               : "bg-white border-slate-100 text-slate-700"
@@ -127,7 +127,7 @@ export default function ReportsView({
 
         <button
           onClick={() => setReportType("ROI")}
-          className={`text-left p-5 rounded-2xl border transition-all hover:border-slate-300 flex items-start gap-4 ${
+          className={`text-left p-5 rounded-2xl border transition-all smooth-hover cursor-pointer flex items-start gap-4 ${
             reportType === "ROI" 
               ? "bg-blue-50/20 border-blue-200 text-blue-900 custom-glow" 
               : "bg-white border-slate-100 text-slate-700"
@@ -175,7 +175,7 @@ export default function ReportsView({
             }
 
             return (
-              <div key={i} className="space-y-1.5">
+              <div key={i} className="space-y-1.5 animate-in fade-in slide-in-from-left duration-250">
                 <div className="flex justify-between items-center text-xs font-semibold">
                   <span className="text-slate-700">{r.name} <span className="text-[10px] text-slate-400 font-mono">({r.registrationNumber})</span></span>
                   <span className="font-mono text-slate-900">{displayVal}</span>
@@ -199,7 +199,7 @@ export default function ReportsView({
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  <th className="px-6 py-4">Vehicle Specs</th>
+                  <th className="px-6 py-4">{t("veh_details")}</th>
                   <th className="px-6 py-4">Total Distance Tripped</th>
                   <th className="px-6 py-4">Total Fuel Consumption</th>
                   <th className="px-6 py-4">Refill Invoices</th>
@@ -231,7 +231,7 @@ export default function ReportsView({
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  <th className="px-6 py-4">Vehicle Specs</th>
+                  <th className="px-6 py-4">{t("veh_details")}</th>
                   <th className="px-6 py-4">Fuel Refills</th>
                   <th className="px-6 py-4">Service maintenance</th>
                   <th className="px-6 py-4">General Expenses</th>
@@ -263,7 +263,7 @@ export default function ReportsView({
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  <th className="px-6 py-4">Vehicle Specs</th>
+                  <th className="px-6 py-4">{t("veh_details")}</th>
                   <th className="px-6 py-4">Asset Capital Value</th>
                   <th className="px-6 py-4">Trips Completed Revenue</th>
                   <th className="px-6 py-4">Direct Repair & Fuel Cost</th>

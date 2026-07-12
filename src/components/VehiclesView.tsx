@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Search, Truck, Filter, MapPin, Scale, Gauge, DollarSign, Eye, ShieldAlert, Trash2, Edit } from "lucide-react";
 import { Role, Vehicle, VehicleStatus } from "../types";
+import { useLanguage } from "../LanguageContext";
 
 interface VehiclesViewProps {
   vehicles: Vehicle[];
@@ -19,6 +20,7 @@ export default function VehiclesView({
   onRetireVehicle,
   globalSearchQuery
 }: VehiclesViewProps) {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("ALL");
   const [filterStatus, setFilterStatus] = useState("ALL");
@@ -90,7 +92,7 @@ export default function VehiclesView({
 
     const trimmedRegNo = regNo.trim();
     if (!trimmedRegNo || !name || !type || !capacity || !odometer || !cost || !region) {
-      setError("Please fill out all fields before enrolling.");
+      setError(t("veh_err_fill_all"));
       return;
     }
 
@@ -100,7 +102,7 @@ export default function VehiclesView({
         (v) => v.registrationNumber.toLowerCase() === trimmedRegNo.toLowerCase()
       );
       if (isDuplicate) {
-        setError(`A vehicle with registration number '${trimmedRegNo}' already exists.`);
+        setError(t("veh_confirm_retire", { reg: trimmedRegNo }) ? `A vehicle with registration number '${trimmedRegNo}' already exists.` : "Duplicate Registration Number");
         return;
       }
     }
@@ -128,7 +130,8 @@ export default function VehiclesView({
   };
 
   const handleRetire = async (v: Vehicle) => {
-    if (window.confirm(`Are you absolutely sure you want to permanently RETIRE vehicle ${v.registrationNumber}? This is a terminal state transition.`)) {
+    const confirmationText = t("veh_confirm_retire", { reg: v.registrationNumber });
+    if (window.confirm(confirmationText)) {
       try {
         await onRetireVehicle(v.id);
       } catch (err: any) {
@@ -142,25 +145,25 @@ export default function VehiclesView({
       case VehicleStatus.AVAILABLE:
         return (
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Available
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> {t("veh_status_available")}
           </span>
         );
       case VehicleStatus.ON_TRIP:
         return (
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> On Trip
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> {t("veh_status_ontrip")}
           </span>
         );
       case VehicleStatus.IN_SHOP:
         return (
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> In Shop
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> {t("veh_status_inshop")}
           </span>
         );
       case VehicleStatus.RETIRED:
         return (
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Retired
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span> {t("veh_status_retired")}
           </span>
         );
       default:
@@ -173,16 +176,16 @@ export default function VehiclesView({
       {/* Header and Controls */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Fleet Asset Registry</h1>
-          <p className="text-sm text-slate-500 mt-1">Enroll, audit, and transition status of vehicles across regions.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("veh_title")}</h1>
+          <p className="text-sm text-slate-500 mt-1">{t("veh_subtitle")}</p>
         </div>
         {activeRole === Role.FLEET_MANAGER && (
           <button
             id="enroll-vehicle-btn"
             onClick={handleOpenAdd}
-            className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-xs smooth-hover cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Enroll New Vehicle
+            <Plus className="w-4 h-4" /> {t("veh_enroll_btn")}
           </button>
         )}
       </div>
@@ -195,10 +198,10 @@ export default function VehiclesView({
           <input
             id="vehicle-search"
             type="text"
-            placeholder="Search name or plate..."
+            placeholder={t("veh_search_placeholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full text-sm pl-9 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+            className="w-full text-sm pl-9 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition"
           />
         </div>
 
@@ -209,9 +212,9 @@ export default function VehiclesView({
             id="vehicle-filter-type"
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="w-full text-sm py-2 px-3 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+            className="w-full text-sm py-2 px-3 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition cursor-pointer"
           >
-            <option value="ALL">All Asset Types</option>
+            <option value="ALL">{t("veh_filter_all_types")}</option>
             <option value="Van">Vans</option>
             <option value="Truck">Trucks</option>
             <option value="Bus">Buses</option>
@@ -227,13 +230,13 @@ export default function VehiclesView({
             id="vehicle-filter-status"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full text-sm py-2 px-3 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+            className="w-full text-sm py-2 px-3 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition cursor-pointer"
           >
-            <option value="ALL">All Statuses</option>
-            <option value="AVAILABLE">Available Only</option>
-            <option value="ON_TRIP">Out on Trip</option>
-            <option value="IN_SHOP">Under Maintenance</option>
-            <option value="RETIRED">Retired Asset</option>
+            <option value="ALL">{t("veh_filter_all_statuses")}</option>
+            <option value="AVAILABLE">{t("veh_status_available")}</option>
+            <option value="ON_TRIP">{t("veh_status_ontrip")}</option>
+            <option value="IN_SHOP">{t("veh_status_inshop")}</option>
+            <option value="RETIRED">{t("veh_status_retired")}</option>
           </select>
         </div>
 
@@ -244,9 +247,9 @@ export default function VehiclesView({
             id="vehicle-filter-region"
             value={filterRegion}
             onChange={(e) => setFilterRegion(e.target.value)}
-            className="w-full text-sm py-2 px-3 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+            className="w-full text-sm py-2 px-3 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition cursor-pointer"
           >
-            <option value="ALL">All Regions</option>
+            <option value="ALL">{t("veh_filter_all_regions")}</option>
             <option value="North">North Hub</option>
             <option value="South">South Hub</option>
             <option value="East">East Hub</option>
@@ -261,13 +264,13 @@ export default function VehiclesView({
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                <th className="px-6 py-4">Asset Details</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Odometer</th>
-                <th className="px-6 py-4">Capacity</th>
-                <th className="px-6 py-4">Region</th>
-                <th className="px-6 py-4">Valuation</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-6 py-4">{t("veh_details")}</th>
+                <th className="px-6 py-4">{t("veh_status")}</th>
+                <th className="px-6 py-4">{t("veh_odometer")}</th>
+                <th className="px-6 py-4">{t("veh_capacity")}</th>
+                <th className="px-6 py-4">{t("veh_region")}</th>
+                <th className="px-6 py-4">{t("veh_valuation")}</th>
+                <th className="px-6 py-4 text-right">{t("actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
@@ -313,17 +316,17 @@ export default function VehiclesView({
                           <button
                             id={`edit-vehicle-${v.id}`}
                             onClick={() => handleOpenEdit(v)}
-                            title="Edit vehicle details"
-                            className="p-1.5 hover:bg-blue-50 text-slate-500 hover:text-blue-600 rounded-lg border border-transparent hover:border-blue-100 transition"
+                            title={t("edit")}
+                            className="p-1.5 hover:bg-blue-50 text-slate-500 hover:text-blue-600 rounded-lg border border-transparent hover:border-blue-100 transition smooth-hover cursor-pointer"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             id={`retire-vehicle-${v.id}`}
                             onClick={() => handleRetire(v)}
-                            title="Permanently retire vehicle"
+                            title={t("veh_status_retired")}
                             disabled={v.status === VehicleStatus.ON_TRIP}
-                            className={`p-1.5 rounded-lg border border-transparent transition ${
+                            className={`p-1.5 rounded-lg border border-transparent transition smooth-hover cursor-pointer ${
                               v.status === VehicleStatus.ON_TRIP 
                                 ? "text-slate-200 cursor-not-allowed" 
                                 : "hover:bg-rose-50 text-slate-500 hover:text-rose-600 hover:border-rose-100"
@@ -334,7 +337,7 @@ export default function VehiclesView({
                         </>
                       )}
                       {activeRole !== Role.FLEET_MANAGER && (
-                        <span className="text-xs text-slate-400 font-medium font-mono px-2 py-1">READ ONLY</span>
+                        <span className="text-xs text-slate-400 font-medium font-mono px-2 py-1">{t("read_only")}</span>
                       )}
                     </div>
                   </td>
@@ -343,10 +346,9 @@ export default function VehiclesView({
 
               {filteredVehicles.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400 animate-pulse">
                     <Truck className="w-12 h-12 text-slate-200 mx-auto mb-2" />
                     <p className="text-sm font-semibold">No assets found matching filters.</p>
-                    <p className="text-xs text-slate-400 mt-1">Check search string or ease filter requirements.</p>
                   </td>
                 </tr>
               )}
@@ -361,11 +363,11 @@ export default function VehiclesView({
           <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-100 shadow-xl overflow-hidden animate-in fade-in zoom-in duration-150">
             <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <h2 className="text-lg font-bold text-slate-900">
-                {modalMode === "ADD" ? "Enroll Fleet Asset" : "Update Fleet Asset Specs"}
+                {modalMode === "ADD" ? t("veh_modal_add") : t("veh_modal_edit")}
               </h2>
               <button 
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 text-lg font-bold p-1 rounded-lg hover:bg-slate-200 transition"
+                className="text-slate-400 hover:text-slate-600 text-lg font-bold p-1 rounded-lg hover:bg-slate-200 transition cursor-pointer"
               >
                 ✕
               </button>
@@ -381,7 +383,7 @@ export default function VehiclesView({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Plate / Registration #</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{t("veh_label_reg")}</label>
                   <input
                     id="modal-vehicle-reg"
                     type="text"
@@ -390,16 +392,16 @@ export default function VehiclesView({
                     disabled={modalMode === "EDIT"}
                     value={regNo}
                     onChange={(e) => setRegNo(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 disabled:bg-slate-100 transition"
+                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 disabled:bg-slate-100 transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Vehicle Classification</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{t("veh_label_type")}</label>
                   <select
                     id="modal-vehicle-type"
                     value={type}
                     onChange={(e) => setType(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition cursor-pointer"
                   >
                     <option value="Van">Van</option>
                     <option value="Truck">Truck</option>
@@ -411,7 +413,7 @@ export default function VehiclesView({
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Make / Model Name</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{t("veh_label_name")}</label>
                 <input
                   id="modal-vehicle-name"
                   type="text"
@@ -419,13 +421,13 @@ export default function VehiclesView({
                   placeholder="e.g. Ford Transit Custom (Van-05)"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                  className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Max Load Capacity (kg)</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{t("veh_label_capacity")}</label>
                   <input
                     id="modal-vehicle-capacity"
                     type="number"
@@ -434,11 +436,11 @@ export default function VehiclesView({
                     placeholder="e.g. 500"
                     value={capacity}
                     onChange={(e) => setCapacity(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Current Odometer (km)</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{t("veh_label_odo")}</label>
                   <input
                     id="modal-vehicle-odo"
                     type="number"
@@ -447,14 +449,14 @@ export default function VehiclesView({
                     placeholder="e.g. 12000"
                     value={odometer}
                     onChange={(e) => setOdometer(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Acquisition Cost ($)</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{t("veh_label_cost")}</label>
                   <input
                     id="modal-vehicle-cost"
                     type="number"
@@ -463,16 +465,16 @@ export default function VehiclesView({
                     placeholder="e.g. 25000"
                     value={cost}
                     onChange={(e) => setCost(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Assigned Region</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{t("veh_label_region")}</label>
                   <select
                     id="modal-vehicle-region"
                     value={region}
                     onChange={(e) => setRegion(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition cursor-pointer"
                   >
                     <option value="North">North</option>
                     <option value="South">South</option>
@@ -488,14 +490,14 @@ export default function VehiclesView({
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 border border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:bg-slate-50 transition cursor-pointer"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   id="modal-vehicle-submit"
                   type="submit"
                   className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition shadow-xs cursor-pointer"
                 >
-                  {modalMode === "ADD" ? "Enroll Asset" : "Apply Specs"}
+                  {modalMode === "ADD" ? t("veh_btn_enroll") : t("veh_btn_apply")}
                 </button>
               </div>
             </form>
