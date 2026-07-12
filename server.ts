@@ -10,6 +10,12 @@ import {
   MaintenanceStatus
 } from "./server/db.js";
 import { isLicenseValid } from "./lib/licenseCheck.js";
+import { vehicleSchema } from "./lib/validation/vehicle.js";
+import { driverSchema } from "./lib/validation/driver.js";
+import { tripSchema } from "./lib/validation/trip.js";
+import { maintenanceSchema } from "./lib/validation/maintenance.js";
+import { fuelSchema } from "./lib/validation/fuel.js";
+import { expenseSchema } from "./lib/validation/expense.js";
 
 const isProd = process.env.NODE_ENV === "production";
 const PORT = 3000;
@@ -17,6 +23,19 @@ const PORT = 3000;
 async function startServer() {
   const app = express();
   app.use(express.json());
+
+  const validateBody = (schema: any) => {
+    return (req: any, res: any, next: any) => {
+      const result = schema.safeParse(req.body);
+      if (!result.success) {
+        const errorMsg = result.error.errors.map((e: any) => `${e.path.join(".")}: ${e.message}`).join(", ");
+        res.status(400).json({ error: `Validation failed: ${errorMsg}` });
+        return;
+      }
+      req.body = result.data;
+      next();
+    };
+  };
 
   // Role authentication helper middleware
   const getRoleHeader = (req: express.Request): Role => {
@@ -65,21 +84,10 @@ async function startServer() {
     res.json(vehicles);
   });
 
-  app.post("/api/vehicles", requireRoles([Role.FLEET_MANAGER]), (req, res) => {
+  app.post("/api/vehicles", requireRoles([Role.FLEET_MANAGER]), validateBody(vehicleSchema), (req, res) => {
     try {
-      const { registrationNumber, name, type, maxLoadCapacityKg, odometerKm, acquisitionCost, region } = req.body;
-      if (!registrationNumber || !name || !type || !maxLoadCapacityKg || !odometerKm || !acquisitionCost || !region) {
-        res.status(400).json({ error: "Missing required vehicle fields" });
-        return;
-      }
       const newVehicle = db.addVehicle({
-        registrationNumber,
-        name,
-        type,
-        maxLoadCapacityKg: Number(maxLoadCapacityKg),
-        odometerKm: Number(odometerKm),
-        acquisitionCost: Number(acquisitionCost),
-        region,
+        ...req.body,
         status: VehicleStatus.AVAILABLE
       });
       res.status(201).json(newVehicle);
@@ -122,20 +130,10 @@ async function startServer() {
     res.json(available);
   });
 
-  app.post("/api/drivers", requireRoles([Role.FLEET_MANAGER, Role.SAFETY_OFFICER]), (req, res) => {
+  app.post("/api/drivers", requireRoles([Role.FLEET_MANAGER, Role.SAFETY_OFFICER]), validateBody(driverSchema), (req, res) => {
     try {
-      const { name, licenseNumber, licenseCategory, licenseExpiryDate, contactNumber, safetyScore } = req.body;
-      if (!name || !licenseNumber || !licenseCategory || !licenseExpiryDate || !contactNumber) {
-        res.status(400).json({ error: "Missing required driver fields" });
-        return;
-      }
       const newDriver = db.addDriver({
-        name,
-        licenseNumber,
-        licenseCategory,
-        licenseExpiryDate,
-        contactNumber,
-        safetyScore: safetyScore !== undefined ? Number(safetyScore) : 100,
+        ...req.body,
         status: DriverStatus.AVAILABLE
       });
       res.status(201).json(newDriver);
@@ -176,21 +174,10 @@ async function startServer() {
     res.json(trips);
   });
 
-  app.post("/api/trips", requireRoles([Role.DISPATCHER]), (req, res) => {
+  app.post("/api/trips", requireRoles([Role.DISPATCHER]), validateBody(tripSchema), (req, res) => {
     try {
-      const { source, destination, vehicleId, driverId, cargoWeightKg, plannedDistanceKm, revenue } = req.body;
-      if (!source || !destination || !vehicleId || !driverId || cargoWeightKg === undefined || plannedDistanceKm === undefined) {
-        res.status(400).json({ error: "Missing required trip fields" });
-        return;
-      }
       const trip = db.createTrip({
-        source,
-        destination,
-        vehicleId,
-        driverId,
-        cargoWeightKg: Number(cargoWeightKg),
-        plannedDistanceKm: Number(plannedDistanceKm),
-        revenue: revenue ? Number(revenue) : 0
+        ...req.body
       });
       res.status(201).json(trip);
     } catch (err: any) {
@@ -247,14 +234,10 @@ async function startServer() {
     res.json(logs);
   });
 
-  app.post("/api/maintenance", requireRoles([Role.FLEET_MANAGER]), (req, res) => {
+  app.post("/api/maintenance", requireRoles([Role.FLEET_MANAGER]), validateBody(maintenanceSchema), (req, res) => {
     try {
       const { vehicleId, description, cost } = req.body;
-      if (!vehicleId || !description || cost === undefined) {
-        res.status(400).json({ error: "Missing maintenance fields (vehicleId, description, cost)" });
-        return;
-      }
-      const log = db.openMaintenance(vehicleId, description, Number(cost));
+      const log = db.openMaintenance(vehicleId, description, cost);
       res.status(201).json(log);
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -280,14 +263,10 @@ async function startServer() {
     res.json(db.getFuelLogs());
   });
 
-  app.post("/api/fuel-logs", requireRoles([Role.FLEET_MANAGER, Role.FINANCIAL_ANALYST, Role.DISPATCHER]), (req, res) => {
+  app.post("/api/fuel-logs", requireRoles([Role.FLEET_MANAGER, Role.FINANCIAL_ANALYST, Role.DISPATCHER]), validateBody(fuelSchema), (req, res) => {
     try {
       const { vehicleId, liters, cost } = req.body;
-      if (!vehicleId || liters === undefined || cost === undefined) {
-        res.status(400).json({ error: "Missing vehicleId, liters, or cost" });
-        return;
-      }
-      const log = db.addFuelLog(vehicleId, Number(liters), Number(cost));
+      const log = db.addFuelLog(vehicleId, liters, cost);
       res.status(201).json(log);
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -299,19 +278,10 @@ async function startServer() {
     res.json(db.getExpenses());
   });
 
-  app.post("/api/expenses", requireRoles([Role.FLEET_MANAGER, Role.FINANCIAL_ANALYST]), (req, res) => {
+  app.post("/api/expenses", requireRoles([Role.FLEET_MANAGER, Role.FINANCIAL_ANALYST]), validateBody(expenseSchema), (req, res) => {
     try {
-      const { vehicleId, tripId, category, amount, description } = req.body;
-      if (!category || amount === undefined) {
-        res.status(400).json({ error: "Missing category or amount" });
-        return;
-      }
       const newExpense = db.addExpense({
-        vehicleId: vehicleId || null,
-        tripId: tripId || null,
-        category,
-        amount: Number(amount),
-        description: description || null
+        ...req.body
       });
       res.status(201).json(newExpense);
     } catch (err: any) {

@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { Role, DashboardKPIs, Vehicle, Driver, Trip } from "../types";
 import { useLanguage } from "../LanguageContext";
+import PageHeader from "./ui/PageHeader";
+import KpiCard from "./ui/KpiCard";
 
 interface DashboardViewProps {
   kpis: DashboardKPIs;
@@ -157,36 +159,29 @@ export default function DashboardView({
   return (
     <div className="space-y-6 animate-fade-in-up">
       {/* Header Info */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("db_overview")}</h1>
-          <p className="text-sm text-slate-500 mt-1">{t("db_overview_sub")}</p>
-        </div>
-        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-100 shadow-xs text-xs font-semibold text-slate-500 shrink-0">
-          <Calendar className="w-3.5 h-3.5 text-blue-600" />
-          <span>UTC: 2026-07-12</span>
-        </div>
-      </div>
+      <PageHeader
+        title={t("db_overview")}
+        subtitle={t("db_overview_sub")}
+        actionSlot={
+          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-100 shadow-xs text-xs font-semibold text-slate-500 shrink-0">
+            <Calendar className="w-3.5 h-3.5 text-blue-600" />
+            <span>UTC: 2026-07-12</span>
+          </div>
+        }
+      />
 
       {/* Grid of Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {cards.map((card, i) => {
-          const Icon = card.icon;
-          return (
-            <div key={i} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between glass-panel dashboard-card cursor-pointer">
-              <div className="flex justify-between items-start">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{card.title}</span>
-                <div className={`p-2 rounded-xl border shrink-0 icon-box ${card.color}`}>
-                  <Icon className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="mt-4">
-                <h3 className="text-2xl font-bold text-slate-900 font-mono tracking-tight">{card.value}</h3>
-                <p className="text-xs text-slate-400 font-semibold mt-1">{card.sub}</p>
-              </div>
-            </div>
-          );
-        })}
+        {cards.map((card, i) => (
+          <KpiCard
+            key={i}
+            title={card.title}
+            value={card.value}
+            subText={card.sub}
+            icon={card.icon}
+            colorClass={card.color}
+          />
+        ))}
       </div>
 
       {/* Double Column Info section */}

@@ -613,12 +613,85 @@ var JSONDatabase = class {
 };
 var db = new JSONDatabase();
 
+// lib/validation/vehicle.ts
+var import_zod = require("zod");
+var vehicleSchema = import_zod.z.object({
+  registrationNumber: import_zod.z.string().min(1, "Registration number is required"),
+  name: import_zod.z.string().min(1, "Name is required"),
+  type: import_zod.z.string().min(1, "Type is required"),
+  maxLoadCapacityKg: import_zod.z.coerce.number().positive("Max load capacity must be positive"),
+  odometerKm: import_zod.z.coerce.number().nonnegative("Odometer must be non-negative"),
+  acquisitionCost: import_zod.z.coerce.number().positive("Acquisition cost must be positive"),
+  region: import_zod.z.string().min(1, "Region is required")
+});
+
+// lib/validation/driver.ts
+var import_zod2 = require("zod");
+var driverSchema = import_zod2.z.object({
+  name: import_zod2.z.string().min(1, "Name is required"),
+  licenseNumber: import_zod2.z.string().min(1, "License number is required"),
+  licenseCategory: import_zod2.z.string().min(1, "License category is required"),
+  licenseExpiryDate: import_zod2.z.string().min(1, "License expiry date is required"),
+  contactNumber: import_zod2.z.string().min(1, "Contact number is required"),
+  safetyScore: import_zod2.z.coerce.number().min(0).max(100, "Safety score must be between 0 and 100")
+});
+
+// lib/validation/trip.ts
+var import_zod3 = require("zod");
+var tripSchema = import_zod3.z.object({
+  source: import_zod3.z.string().min(1, "Source is required"),
+  destination: import_zod3.z.string().min(1, "Destination is required"),
+  vehicleId: import_zod3.z.string().min(1, "Vehicle ID is required"),
+  driverId: import_zod3.z.string().min(1, "Driver ID is required"),
+  cargoWeightKg: import_zod3.z.coerce.number().positive("Cargo weight must be positive"),
+  plannedDistanceKm: import_zod3.z.coerce.number().positive("Planned distance must be positive"),
+  revenue: import_zod3.z.coerce.number().nonnegative("Revenue must be non-negative").optional().nullable()
+});
+
+// lib/validation/maintenance.ts
+var import_zod4 = require("zod");
+var maintenanceSchema = import_zod4.z.object({
+  vehicleId: import_zod4.z.string().min(1, "Vehicle ID is required"),
+  description: import_zod4.z.string().min(1, "Description is required"),
+  cost: import_zod4.z.coerce.number().nonnegative("Estimated cost must be non-negative")
+});
+
+// lib/validation/fuel.ts
+var import_zod5 = require("zod");
+var fuelSchema = import_zod5.z.object({
+  vehicleId: import_zod5.z.string().min(1, "Vehicle ID is required"),
+  liters: import_zod5.z.coerce.number().positive("Liters must be positive"),
+  cost: import_zod5.z.coerce.number().positive("Cost must be positive")
+});
+
+// lib/validation/expense.ts
+var import_zod6 = require("zod");
+var expenseSchema = import_zod6.z.object({
+  vehicleId: import_zod6.z.string().nullable().optional(),
+  tripId: import_zod6.z.string().nullable().optional(),
+  category: import_zod6.z.enum(["TOLL", "MISC", "MAINTENANCE", "FUEL", "OTHER"]),
+  amount: import_zod6.z.coerce.number().positive("Amount must be positive"),
+  description: import_zod6.z.string().nullable().optional()
+});
+
 // server.ts
 var isProd = process.env.NODE_ENV === "production";
 var PORT = 3e3;
 async function startServer() {
   const app = (0, import_express.default)();
   app.use(import_express.default.json());
+  const validateBody = (schema) => {
+    return (req, res, next) => {
+      const result = schema.safeParse(req.body);
+      if (!result.success) {
+        const errorMsg = result.error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ");
+        res.status(400).json({ error: `Validation failed: ${errorMsg}` });
+        return;
+      }
+      req.body = result.data;
+      next();
+    };
+  };
   const getRoleHeader = (req) => {
     const role = req.headers["x-user-role"];
     if (Object.values(Role).includes(role)) {
@@ -653,21 +726,10 @@ async function startServer() {
     const vehicles = db.getVehicles().filter((v) => v.status === "AVAILABLE" /* AVAILABLE */);
     res.json(vehicles);
   });
-  app.post("/api/vehicles", requireRoles(["FLEET_MANAGER" /* FLEET_MANAGER */]), (req, res) => {
+  app.post("/api/vehicles", requireRoles(["FLEET_MANAGER" /* FLEET_MANAGER */]), validateBody(vehicleSchema), (req, res) => {
     try {
-      const { registrationNumber, name, type, maxLoadCapacityKg, odometerKm, acquisitionCost, region } = req.body;
-      if (!registrationNumber || !name || !type || !maxLoadCapacityKg || !odometerKm || !acquisitionCost || !region) {
-        res.status(400).json({ error: "Missing required vehicle fields" });
-        return;
-      }
       const newVehicle = db.addVehicle({
-        registrationNumber,
-        name,
-        type,
-        maxLoadCapacityKg: Number(maxLoadCapacityKg),
-        odometerKm: Number(odometerKm),
-        acquisitionCost: Number(acquisitionCost),
-        region,
+        ...req.body,
         status: "AVAILABLE" /* AVAILABLE */
       });
       res.status(201).json(newVehicle);
@@ -703,20 +765,10 @@ async function startServer() {
     });
     res.json(available);
   });
-  app.post("/api/drivers", requireRoles(["FLEET_MANAGER" /* FLEET_MANAGER */, "SAFETY_OFFICER" /* SAFETY_OFFICER */]), (req, res) => {
+  app.post("/api/drivers", requireRoles(["FLEET_MANAGER" /* FLEET_MANAGER */, "SAFETY_OFFICER" /* SAFETY_OFFICER */]), validateBody(driverSchema), (req, res) => {
     try {
-      const { name, licenseNumber, licenseCategory, licenseExpiryDate, contactNumber, safetyScore } = req.body;
-      if (!name || !licenseNumber || !licenseCategory || !licenseExpiryDate || !contactNumber) {
-        res.status(400).json({ error: "Missing required driver fields" });
-        return;
-      }
       const newDriver = db.addDriver({
-        name,
-        licenseNumber,
-        licenseCategory,
-        licenseExpiryDate,
-        contactNumber,
-        safetyScore: safetyScore !== void 0 ? Number(safetyScore) : 100,
+        ...req.body,
         status: "AVAILABLE" /* AVAILABLE */
       });
       res.status(201).json(newDriver);
@@ -751,21 +803,10 @@ async function startServer() {
     if (status) trips = trips.filter((t) => t.status === status);
     res.json(trips);
   });
-  app.post("/api/trips", requireRoles(["DISPATCHER" /* DISPATCHER */]), (req, res) => {
+  app.post("/api/trips", requireRoles(["DISPATCHER" /* DISPATCHER */]), validateBody(tripSchema), (req, res) => {
     try {
-      const { source, destination, vehicleId, driverId, cargoWeightKg, plannedDistanceKm, revenue } = req.body;
-      if (!source || !destination || !vehicleId || !driverId || cargoWeightKg === void 0 || plannedDistanceKm === void 0) {
-        res.status(400).json({ error: "Missing required trip fields" });
-        return;
-      }
       const trip = db.createTrip({
-        source,
-        destination,
-        vehicleId,
-        driverId,
-        cargoWeightKg: Number(cargoWeightKg),
-        plannedDistanceKm: Number(plannedDistanceKm),
-        revenue: revenue ? Number(revenue) : 0
+        ...req.body
       });
       res.status(201).json(trip);
     } catch (err) {
@@ -814,14 +855,10 @@ async function startServer() {
     if (status) logs = logs.filter((l) => l.status === status);
     res.json(logs);
   });
-  app.post("/api/maintenance", requireRoles(["FLEET_MANAGER" /* FLEET_MANAGER */]), (req, res) => {
+  app.post("/api/maintenance", requireRoles(["FLEET_MANAGER" /* FLEET_MANAGER */]), validateBody(maintenanceSchema), (req, res) => {
     try {
       const { vehicleId, description, cost } = req.body;
-      if (!vehicleId || !description || cost === void 0) {
-        res.status(400).json({ error: "Missing maintenance fields (vehicleId, description, cost)" });
-        return;
-      }
-      const log = db.openMaintenance(vehicleId, description, Number(cost));
+      const log = db.openMaintenance(vehicleId, description, cost);
       res.status(201).json(log);
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -843,14 +880,10 @@ async function startServer() {
   app.get("/api/fuel-logs", (req, res) => {
     res.json(db.getFuelLogs());
   });
-  app.post("/api/fuel-logs", requireRoles(["FLEET_MANAGER" /* FLEET_MANAGER */, "FINANCIAL_ANALYST" /* FINANCIAL_ANALYST */, "DISPATCHER" /* DISPATCHER */]), (req, res) => {
+  app.post("/api/fuel-logs", requireRoles(["FLEET_MANAGER" /* FLEET_MANAGER */, "FINANCIAL_ANALYST" /* FINANCIAL_ANALYST */, "DISPATCHER" /* DISPATCHER */]), validateBody(fuelSchema), (req, res) => {
     try {
       const { vehicleId, liters, cost } = req.body;
-      if (!vehicleId || liters === void 0 || cost === void 0) {
-        res.status(400).json({ error: "Missing vehicleId, liters, or cost" });
-        return;
-      }
-      const log = db.addFuelLog(vehicleId, Number(liters), Number(cost));
+      const log = db.addFuelLog(vehicleId, liters, cost);
       res.status(201).json(log);
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -859,19 +892,10 @@ async function startServer() {
   app.get("/api/expenses", (req, res) => {
     res.json(db.getExpenses());
   });
-  app.post("/api/expenses", requireRoles(["FLEET_MANAGER" /* FLEET_MANAGER */, "FINANCIAL_ANALYST" /* FINANCIAL_ANALYST */]), (req, res) => {
+  app.post("/api/expenses", requireRoles(["FLEET_MANAGER" /* FLEET_MANAGER */, "FINANCIAL_ANALYST" /* FINANCIAL_ANALYST */]), validateBody(expenseSchema), (req, res) => {
     try {
-      const { vehicleId, tripId, category, amount, description } = req.body;
-      if (!category || amount === void 0) {
-        res.status(400).json({ error: "Missing category or amount" });
-        return;
-      }
       const newExpense = db.addExpense({
-        vehicleId: vehicleId || null,
-        tripId: tripId || null,
-        category,
-        amount: Number(amount),
-        description: description || null
+        ...req.body
       });
       res.status(201).json(newExpense);
     } catch (err) {
