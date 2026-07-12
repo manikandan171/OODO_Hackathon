@@ -24,6 +24,7 @@ export const translations = {
     tab_maintenance: "Work Orders",
     tab_fuel_expenses: "Accounting Journals",
     tab_reports: "Logistics Intelligence",
+    tab_live_tracking: "Live Tracking Map",
 
     // Roles
     role_fleet_manager: "Fleet Manager",
@@ -217,6 +218,7 @@ export const translations = {
     tab_maintenance: "பராமரிப்புப் பணிகள்",
     tab_fuel_expenses: "கணக்கு பதிவுகள்",
     tab_reports: "தளவாட அறிக்கை",
+    tab_live_tracking: "நேரடி வரைபடம்",
 
     // Roles
     role_fleet_manager: "கடற்படை மேலாளர்",
@@ -410,6 +412,7 @@ export const translations = {
     tab_maintenance: "Órdenes de Trabajo",
     tab_fuel_expenses: "Diarios Contables",
     tab_reports: "Inteligencia Logística",
+    tab_live_tracking: "Mapa en Vivo",
 
     // Roles
     role_fleet_manager: "Gerente de Flota",

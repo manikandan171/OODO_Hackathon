@@ -15,7 +15,8 @@ import {
   User,
   Power,
   RefreshCw,
-  Search
+  Search,
+  Map
 } from "lucide-react";
 import { 
   Role, 
@@ -37,6 +38,7 @@ import TripsView from "./components/TripsView";
 import MaintenanceView from "./components/MaintenanceView";
 import FuelExpensesView from "./components/FuelExpensesView";
 import ReportsView from "./components/ReportsView";
+import TrackingMapView from "./components/TrackingMapView";
 import { useLanguage } from "./LanguageContext";
 
 
@@ -58,6 +60,7 @@ export default function App() {
   const navigateTo = (tabId: string, subpath: string = "") => {
     let path = "/" + tabId;
     if (tabId === "dashboard") path = "/dashboard";
+    if (tabId === "live-tracking") path = "/live-tracking";
     if (subpath) path += "/" + subpath;
     
     window.history.pushState(null, "", path);
@@ -122,6 +125,8 @@ export default function App() {
         setActiveTab("fuel-expenses");
       } else if (path === "/reports") {
         setActiveTab("reports");
+      } else if (path === "/live-tracking") {
+        setActiveTab("live-tracking");
       } else if (path === "/dashboard" || path === "/") {
         setActiveTab("dashboard");
       } else {
@@ -396,7 +401,8 @@ export default function App() {
     { id: "trips", label: "Route Assignment", icon: Navigation },
     { id: "maintenance", label: "Work Orders", icon: Wrench },
     { id: "fuel-expenses", label: "Accounting Journals", icon: DollarSign },
-    { id: "reports", label: "Logistics Intelligence", icon: BarChart3 }
+    { id: "reports", label: "Logistics Intelligence", icon: BarChart3 },
+    { id: "live-tracking", label: "Live Tracking Map", icon: Map }
   ];
 
   return (
@@ -773,6 +779,14 @@ export default function App() {
                 <ReportsView
                   analyticsReport={analyticsReport}
                   activeRole={activeRole}
+                />
+              )}
+
+              {activeTab === "live-tracking" && (
+                <TrackingMapView
+                  vehicles={vehicles}
+                  drivers={drivers}
+                  trips={trips}
                 />
               )}
             </div>
