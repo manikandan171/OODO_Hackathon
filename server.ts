@@ -9,6 +9,7 @@ import {
   TripStatus,
   MaintenanceStatus
 } from "./server/db.js";
+import { isLicenseValid } from "./lib/licenseCheck.js";
 
 const isProd = process.env.NODE_ENV === "production";
 const PORT = 3000;
@@ -115,11 +116,8 @@ async function startServer() {
   });
 
   app.get("/api/drivers/available", (req, res) => {
-    const today = new Date();
     const available = db.getDrivers().filter(d => {
-      const isAvailable = d.status === DriverStatus.AVAILABLE;
-      const notExpired = new Date(d.licenseExpiryDate) >= today;
-      return isAvailable && notExpired;
+      return d.status === DriverStatus.AVAILABLE && isLicenseValid(d.licenseExpiryDate);
     });
     res.json(available);
   });
@@ -155,7 +153,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/drivers/:id/suspend", requireRoles([Role.SAFETY_OFFICER]), (req, res) => {
+  app.patch("/api/drivers/:id/suspend", requireRoles([Role.SAFETY_OFFICER]), (req, res) => {
     try {
       const { suspend } = req.body;
       if (suspend === undefined) {

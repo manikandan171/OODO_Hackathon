@@ -29,6 +29,21 @@ var import_vite = require("vite");
 // server/db.ts
 var import_fs = __toESM(require("fs"), 1);
 var import_path = __toESM(require("path"), 1);
+
+// lib/licenseCheck.ts
+function isLicenseValid(expiryDateString) {
+  if (!expiryDateString) return false;
+  const today = /* @__PURE__ */ new Date();
+  today.setHours(0, 0, 0, 0);
+  const expiry = new Date(expiryDateString);
+  if (isNaN(expiry.getTime())) {
+    return false;
+  }
+  expiry.setHours(0, 0, 0, 0);
+  return expiry >= today;
+}
+
+// server/db.ts
 var DB_FILE = import_path.default.join(process.cwd(), "db.json");
 var Role = /* @__PURE__ */ ((Role2) => {
   Role2["FLEET_MANAGER"] = "FLEET_MANAGER";
@@ -379,8 +394,7 @@ var JSONDatabase = class {
     if (tripData.cargoWeightKg > vehicle.maxLoadCapacityKg) {
       throw new Error(`Cargo weight (${tripData.cargoWeightKg}kg) exceeds the maximum capacity of vehicle ${vehicle.registrationNumber} (${vehicle.maxLoadCapacityKg}kg).`);
     }
-    const expiry = new Date(driver.licenseExpiryDate);
-    if (expiry < /* @__PURE__ */ new Date()) {
+    if (!isLicenseValid(driver.licenseExpiryDate)) {
       throw new Error(`Driver ${driver.name}'s license has expired (Expiry: ${driver.licenseExpiryDate}).`);
     }
     if (driver.status === "SUSPENDED" /* SUSPENDED */) {
@@ -424,8 +438,7 @@ var JSONDatabase = class {
     if (driver.status !== "AVAILABLE" /* AVAILABLE */) {
       throw new Error(`Driver ${driver.name} is currently unavailable (Status: ${driver.status}).`);
     }
-    const expiry = new Date(driver.licenseExpiryDate);
-    if (expiry < /* @__PURE__ */ new Date()) {
+    if (!isLicenseValid(driver.licenseExpiryDate)) {
       throw new Error(`Driver ${driver.name}'s license has expired.`);
     }
     trip.status = "DISPATCHED" /* DISPATCHED */;
@@ -685,11 +698,8 @@ async function startServer() {
     res.json(drivers);
   });
   app.get("/api/drivers/available", (req, res) => {
-    const today = /* @__PURE__ */ new Date();
     const available = db.getDrivers().filter((d) => {
-      const isAvailable = d.status === "AVAILABLE" /* AVAILABLE */;
-      const notExpired = new Date(d.licenseExpiryDate) >= today;
-      return isAvailable && notExpired;
+      return d.status === "AVAILABLE" /* AVAILABLE */ && isLicenseValid(d.licenseExpiryDate);
     });
     res.json(available);
   });
@@ -722,7 +732,7 @@ async function startServer() {
       res.status(400).json({ error: err.message });
     }
   });
-  app.post("/api/drivers/:id/suspend", requireRoles(["SAFETY_OFFICER" /* SAFETY_OFFICER */]), (req, res) => {
+  app.patch("/api/drivers/:id/suspend", requireRoles(["SAFETY_OFFICER" /* SAFETY_OFFICER */]), (req, res) => {
     try {
       const { suspend } = req.body;
       if (suspend === void 0) {

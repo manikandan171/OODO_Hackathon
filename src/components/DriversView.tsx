@@ -10,6 +10,7 @@ interface DriversViewProps {
   onUpdateDriver: (id: string, updates: any) => Promise<void>;
   onSuspendDriver: (id: string, suspend: boolean) => Promise<void>;
   globalSearchQuery?: string;
+  initialOpenAdd?: boolean;
 }
 
 export default function DriversView({
@@ -18,7 +19,8 @@ export default function DriversView({
   onAddDriver,
   onUpdateDriver,
   onSuspendDriver,
-  globalSearchQuery
+  globalSearchQuery,
+  initialOpenAdd
 }: DriversViewProps) {
   const { t } = useLanguage();
   const [search, setSearch] = useState("");
@@ -26,9 +28,35 @@ export default function DriversView({
 
   useEffect(() => {
     if (globalSearchQuery !== undefined) {
-      setSearch(globalSearchQuery);
+      if (globalSearchQuery.startsWith("d-")) {
+        setSearch("");
+      } else {
+        setSearch(globalSearchQuery);
+      }
     }
   }, [globalSearchQuery]);
+
+  useEffect(() => {
+    if (initialOpenAdd) {
+      setName("");
+      setLicenseNo("");
+      setLicenseCat("LMV");
+      setLicenseExpiry("");
+      setContact("");
+      setSafetyScore("100");
+      setModalMode("ADD");
+      setShowModal(true);
+    }
+  }, [initialOpenAdd]);
+
+  useEffect(() => {
+    if (globalSearchQuery && globalSearchQuery.startsWith("d-") && drivers.length > 0) {
+      const match = drivers.find(d => d.id === globalSearchQuery);
+      if (match) {
+        setActiveLicenseDriver(match);
+      }
+    }
+  }, [globalSearchQuery, drivers]);
 
   // Add / Edit Modal state
   const [showModal, setShowModal] = useState(false);

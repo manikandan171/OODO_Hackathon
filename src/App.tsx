@@ -46,11 +46,64 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [initialOpenAddDriver, setInitialOpenAddDriver] = useState<boolean>(false);
 
   // Global search and navigation filter query state
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [globalSearchQuery, setGlobalSearchQuery] = useState<string>("");
+
+  const navigateTo = (tabId: string, subpath: string = "") => {
+    let path = "/" + tabId;
+    if (tabId === "dashboard") path = "/";
+    if (subpath) path += "/" + subpath;
+    
+    window.history.pushState(null, "", path);
+    setActiveTab(tabId);
+    setSearchQuery("");
+    setGlobalSearchQuery(subpath);
+    if (tabId === "drivers" && subpath === "new") {
+      setInitialOpenAddDriver(true);
+    } else {
+      setInitialOpenAddDriver(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleRouting = () => {
+      const path = window.location.pathname;
+      if (path === "/drivers") {
+        setActiveTab("drivers");
+        setGlobalSearchQuery("");
+        setInitialOpenAddDriver(false);
+      } else if (path === "/drivers/new") {
+        setActiveTab("drivers");
+        setGlobalSearchQuery("");
+        setInitialOpenAddDriver(true);
+      } else if (path.startsWith("/drivers/")) {
+        const id = path.split("/").pop() || "";
+        setActiveTab("drivers");
+        setGlobalSearchQuery(id);
+        setInitialOpenAddDriver(false);
+      } else if (path === "/vehicles") {
+        setActiveTab("vehicles");
+      } else if (path === "/trips") {
+        setActiveTab("trips");
+      } else if (path === "/maintenance") {
+        setActiveTab("maintenance");
+      } else if (path === "/fuel-expenses") {
+        setActiveTab("fuel-expenses");
+      } else if (path === "/reports") {
+        setActiveTab("reports");
+      } else {
+        setActiveTab("dashboard");
+      }
+    };
+
+    handleRouting();
+    window.addEventListener("popstate", handleRouting);
+    return () => window.removeEventListener("popstate", handleRouting);
+  }, []);
 
   // Core operational datasets
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -192,7 +245,7 @@ export default function App() {
 
   const handleSuspendDriver = async (id: string, suspend: boolean) => {
     const res = await fetch(`/api/drivers/${id}/suspend`, {
-      method: "POST",
+      method: "PATCH",
       headers: { "Content-Type": "application/json", "x-user-role": activeRole },
       body: JSON.stringify({ suspend })
     });
@@ -581,11 +634,7 @@ export default function App() {
                 <button
                   key={item.id}
                   id={`nav-${item.id}`}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    setSearchQuery("");
-                    setGlobalSearchQuery("");
-                  }}
+                  onClick={() => navigateTo(item.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all smooth-hover cursor-pointer ${
                     isSelected
                       ? "bg-blue-600 text-white shadow-md scale-102 font-bold"
@@ -627,7 +676,7 @@ export default function App() {
                   drivers={drivers}
                   trips={trips}
                   activeRole={activeRole}
-                  onNavigate={setActiveTab}
+                  onNavigate={(tab) => navigateTo(tab)}
                 />
               )}
 
@@ -650,6 +699,7 @@ export default function App() {
                   onUpdateDriver={handleUpdateDriver}
                   onSuspendDriver={handleSuspendDriver}
                   globalSearchQuery={globalSearchQuery}
+                  initialOpenAdd={initialOpenAddDriver}
                 />
               )}
 

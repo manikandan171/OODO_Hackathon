@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { isLicenseValid } from "../lib/licenseCheck.js";
 
 const DB_FILE = path.join(process.cwd(), "db.json");
 
@@ -491,8 +492,7 @@ class JSONDatabase {
     }
 
     // Guard: License expiration check
-    const expiry = new Date(driver.licenseExpiryDate);
-    if (expiry < new Date()) {
+    if (!isLicenseValid(driver.licenseExpiryDate)) {
       throw new Error(`Driver ${driver.name}'s license has expired (Expiry: ${driver.licenseExpiryDate}).`);
     }
 
@@ -550,8 +550,7 @@ class JSONDatabase {
     }
 
     // Run License & Expiry checks again
-    const expiry = new Date(driver.licenseExpiryDate);
-    if (expiry < new Date()) {
+    if (!isLicenseValid(driver.licenseExpiryDate)) {
       throw new Error(`Driver ${driver.name}'s license has expired.`);
     }
 
