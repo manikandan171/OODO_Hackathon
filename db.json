@@ -209,6 +209,14 @@
       "liters": 40,
       "cost": 85,
       "date": "2026-07-12T08:31:30.322Z"
+    },
+    {
+      "id": "f-dg0sk3u",
+      "vehicleId": "v-1",
+      "tripId": null,
+      "liters": 52,
+      "cost": 117,
+      "date": "2026-07-12T09:45:01.530Z"
     }
   ],
   "expenses": [
@@ -238,6 +246,15 @@
       "amount": 85,
       "date": "2026-07-12T08:31:30.322Z",
       "description": "Manual Fuel Intake: 40L"
+    },
+    {
+      "id": "e-m5vdc36",
+      "vehicleId": "v-1",
+      "tripId": null,
+      "category": "FUEL",
+      "amount": 117,
+      "date": "2026-07-12T09:45:01.530Z",
+      "description": "Manual Fuel Intake: 52L"
     }
   ]
 }

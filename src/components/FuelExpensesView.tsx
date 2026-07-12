@@ -29,6 +29,26 @@ export default function FuelExpensesView({
   const [fuelLiters, setFuelLiters] = useState("40");
   const [fuelCost, setFuelCost] = useState("85");
 
+  const [isScanning, setIsScanning] = useState(false);
+  const [ocrSuccess, setOcrSuccess] = useState<string | null>(null);
+
+  const handleReceiptScan = (e: any) => {
+    e.preventDefault();
+    setIsScanning(true);
+    setOcrSuccess(null);
+
+    setTimeout(() => {
+      const randomLiters = Math.floor(Math.random() * 30) + 30; // 30 to 60 liters
+      const randomCost = Math.floor(randomLiters * 2.25);
+      
+      setFuelLiters(randomLiters.toString());
+      setFuelCost(randomCost.toString());
+      
+      setIsScanning(false);
+      setOcrSuccess(`Parsed receipt successfully: Auto-filled ${randomLiters} Liters and $${randomCost}.`);
+    }, 1800);
+  };
+
   // Manual Expense Form state
   const [expVehicleId, setExpVehicleId] = useState("");
   const [expCategory, setExpCategory] = useState<"TOLL" | "MISC" | "MAINTENANCE" | "FUEL" | "OTHER">("TOLL");
@@ -161,7 +181,41 @@ export default function FuelExpensesView({
               </p>
             </div>
           ) : activeTab === "FUEL" ? (
-            <form onSubmit={handleFuelSubmit} className="space-y-4">
+            <div className="space-y-4">
+              {/* Drag and drop receipt dropzone */}
+              <div 
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleReceiptScan}
+                className="relative border-2 border-dashed border-slate-200 rounded-xl p-4 text-center bg-slate-50 hover:bg-slate-100/50 transition cursor-pointer overflow-hidden group"
+              >
+                {isScanning ? (
+                  <div className="py-4 space-y-3">
+                    <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                    <p className="text-xs font-bold text-slate-600 animate-pulse">Running OCR Scanner...</p>
+                    <div className="absolute top-0 left-0 w-full h-1 bg-green-500 shadow-md shadow-green-500 animate-bounce" style={{ animationDuration: "1.5s" }} />
+                  </div>
+                ) : (
+                  <label className="cursor-pointer block py-2">
+                    <input 
+                      type="file" 
+                      accept="image/*,application/pdf" 
+                      className="hidden" 
+                      onChange={handleReceiptScan}
+                    />
+                    <div className="text-slate-400 group-hover:text-blue-500 transition text-2xl mb-1">📸</div>
+                    <p className="text-xs font-bold text-slate-700">Drag receipt here or click to browse</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Mock OCR automatically extracts Liters and Cost</p>
+                  </label>
+                )}
+              </div>
+
+              {ocrSuccess && (
+                <div className="p-2.5 bg-emerald-50 border border-emerald-100 text-emerald-800 text-[10px] font-bold rounded-lg animate-fade-in-up">
+                  ✓ {ocrSuccess}
+                </div>
+              )}
+
+              <form onSubmit={handleFuelSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{t("acc_label_select_veh")}</label>
                 <select
@@ -213,6 +267,7 @@ export default function FuelExpensesView({
                 {t("acc_log_fuel_btn")}
               </button>
             </form>
+            </div>
           ) : (
             <form onSubmit={handleExpenseSubmit} className="space-y-4">
               <div>

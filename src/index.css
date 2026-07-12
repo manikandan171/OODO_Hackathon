@@ -229,3 +229,29 @@ h1, h2, h3, h4, .font-display {
 .pulse-slow {
   animation: pulse-slow 3.5s ease-in-out infinite;
 }
+
+/* Custom overrides to completely hide Google Translate frames & branding */
+.goog-te-banner-frame, 
+.goog-te-banner-frame.skiptranslate,
+.goog-te-gadget-simple img,
+.goog-te-menu-value span,
+.goog-te-gadget-icon,
+iframe.goog-te-banner-frame {
+  display: none !important;
+}
+
+body {
+  top: 0px !important;
+}
+
+.goog-tooltip {
+  display: none !important;
+}
+.goog-tooltip:hover {
+  display: none !important;
+}
+.goog-text-highlight {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}

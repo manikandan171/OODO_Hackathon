@@ -139,6 +139,22 @@ export default function App() {
     return () => window.removeEventListener("popstate", handleRouting);
   }, [] );
 
+  // Programmatically trigger Google Translate Widget when custom language selection changes
+  useEffect(() => {
+    const syncGoogleTranslate = () => {
+      const selectEl = document.querySelector(".goog-te-combo") as HTMLSelectElement;
+      if (selectEl) {
+        if (selectEl.value !== language) {
+          selectEl.value = language;
+          selectEl.dispatchEvent(new Event("change"));
+        }
+      }
+    };
+    syncGoogleTranslate();
+    const interval = setInterval(syncGoogleTranslate, 500);
+    return () => clearInterval(interval);
+  }, [language]);
+
   // Core operational datasets
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -643,6 +659,7 @@ export default function App() {
               <option value="en" className="bg-slate-900 text-white">EN</option>
               <option value="ta" className="bg-slate-900 text-white">தமிழ்</option>
               <option value="es" className="bg-slate-900 text-white">ES</option>
+              <option value="hi" className="bg-slate-900 text-white">हिंदी</option>
             </select>
           </div>
 

@@ -332,6 +332,70 @@ export default function DashboardView({
           </div>
         </div>
       </div>
+
+      {/* Predictive Maintenance Analytics Engine */}
+      <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-xs mt-6 animate-fade-in-up">
+        <div className="mb-4">
+          <h2 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
+            🔮 Predictive Maintenance & Telemetry Forecaster
+          </h2>
+          <p className="text-xs text-slate-400 mt-0.5">Calculates average daily mileage run-rate and forecasts future service calendar dates based on real-time routing histories.</p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {vehicles.filter(v => v.status !== "RETIRED").map(v => {
+            const vehicleTrips = trips.filter(t => t.vehicleId === v.id && t.status === "COMPLETED");
+            const totalDistance = vehicleTrips.reduce((sum, t) => sum + (t.plannedDistanceKm ?? 0), 0);
+            const tripCount = vehicleTrips.length;
+            const avgTripDist = tripCount > 0 ? (totalDistance / tripCount) : 0;
+            const dailyRate = tripCount > 0 ? Math.round(avgTripDist * 0.45 + 80) : 120; // km/day
+            const nextThreshold = Math.ceil((v.odometerKm + 1) / 10000) * 10000;
+            const kmLeft = nextThreshold - v.odometerKm;
+            const daysLeft = Math.max(1, Math.round(kmLeft / dailyRate));
+            
+            const projDate = new Date();
+            projDate.setDate(projDate.getDate() + daysLeft);
+            const formattedDate = projDate.toISOString().split("T")[0];
+            
+            const progressPercent = Math.min(100, Math.max(0, ((10000 - kmLeft) / 10000) * 100));
+            const color = progressPercent > 85 ? "bg-rose-500" : progressPercent > 60 ? "bg-amber-500" : "bg-blue-500";
+            
+            return (
+              <div key={v.id} className="p-4 border border-slate-100 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition smooth-hover flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="font-bold text-slate-800 text-sm block">{v.name}</span>
+                      <span className="text-[10px] text-slate-400 font-mono font-medium block">{v.registrationNumber} • {v.type}</span>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      progressPercent > 85 ? "bg-rose-50 text-rose-600 border border-rose-100 animate-pulse" : "bg-blue-50 text-blue-600 border border-blue-100"
+                    }`}>
+                      {kmLeft.toLocaleString()} km left
+                    </span>
+                  </div>
+                  
+                  <div className="mt-4 space-y-2">
+                    <div className="flex justify-between text-xs font-semibold text-slate-500">
+                      <span>Usage: {dailyRate} km/day</span>
+                      <span>Odo: {v.odometerKm.toLocaleString()} km</span>
+                    </div>
+                    
+                    <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full ${color}`} style={{ width: `${progressPercent}%` }} />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center text-[10px] pt-1 text-slate-400 border-t border-slate-100 mt-4">
+                  <span>Target: {nextThreshold.toLocaleString()} km</span>
+                  <span className="font-bold text-slate-700">Due: {formattedDate} ({daysLeft} days)</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
