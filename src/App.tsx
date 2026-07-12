@@ -7,7 +7,7 @@ import {
   Users, 
   Navigation, 
   Wrench, 
-  DollarSign, 
+  IndianRupee, 
   BarChart3, 
   ShieldAlert, 
   ShieldCheck, 
@@ -39,6 +39,7 @@ import TripsView from "./components/TripsView";
 import MaintenanceView from "./components/MaintenanceView";
 import FuelExpensesView from "./components/FuelExpensesView";
 import ReportsView from "./components/ReportsView";
+import AccessDenied from "./components/AccessDenied";
 
 export default function App() {
   const { user, token, logout, isLoading: authLoading } = useAuth();
@@ -304,15 +305,20 @@ export default function App() {
 
   // --- RENDERING ROUTE NAVIGATION SIDEBAR ---
 
-  const navigationItems = [
+  const allNavigationItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "vehicles", label: "Vehicles Registry", icon: Truck },
-    { id: "drivers", label: "Operators Manifest", icon: Users },
-    { id: "trips", label: "Route Assignment", icon: Navigation },
-    { id: "maintenance", label: "Work Orders", icon: Wrench },
-    { id: "fuel-expenses", label: "Accounting Journals", icon: DollarSign },
-    { id: "reports", label: "Logistics Intelligence", icon: BarChart3 }
+    { id: "vehicles", label: "Fleet", icon: Truck, roles: [Role.FLEET_MANAGER, Role.DISPATCHER] },
+    { id: "drivers", label: "Drivers", icon: Users, roles: [Role.SAFETY_OFFICER, Role.FLEET_MANAGER, Role.DISPATCHER] },
+    { id: "trips", label: "Trips", icon: Navigation, roles: [Role.DISPATCHER] },
+    { id: "maintenance", label: "Maintenance", icon: Wrench, roles: [Role.FLEET_MANAGER] },
+    { id: "fuel-expenses", label: "Fuel & Expenses", icon: IndianRupee, roles: [Role.FINANCIAL_ANALYST, Role.FLEET_MANAGER] },
+    { id: "reports", label: "Analytics", icon: BarChart3, roles: [Role.FINANCIAL_ANALYST] },
+    { id: "settings", label: "Settings", icon: Truck } // Mockup shows Settings tab, though non-functional for now
   ];
+
+  const navigationItems = user 
+    ? allNavigationItems.filter(item => !item.roles || item.roles.includes(user.role))
+    : [];
 
   if (authLoading) {
     return (
@@ -327,265 +333,112 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
-      {/* 1. Global Interactive Role Switcher Header bar */}
-      <div className="sticky top-0 bg-slate-900 text-white z-40 px-4 py-2.5 flex flex-col md:flex-row justify-between items-center gap-3 border-b border-slate-800 shadow-lg">
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="p-2 bg-blue-600 rounded-lg text-white">
-            <Truck className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="font-extrabold text-base tracking-tight font-sans block">TransitOps</span>
-            <span className="text-[10px] text-slate-400 block font-medium">Enterprise Fleet Optimization Command</span>
+    <div className="min-h-screen flex bg-[#111111] text-slate-300 font-sans">
+      {/* 1. Sidebar Left */}
+      <aside className={`bg-[#111111] border-r border-slate-800 text-slate-400 w-64 flex flex-col transition-all shrink-0 ${sidebarOpen ? "block" : "hidden md:block"}`}>
+        <div className="p-6">
+          <div className="flex items-center gap-3">
+            <span className="font-medium text-xl text-slate-200 tracking-tight" style={{ fontFamily: "cursive, sans-serif" }}>TransitOps</span>
           </div>
         </div>
 
-        {/* Global search bar that allows users to quickly filter vehicles, drivers, or trips by ID or name */}
-        <div className="relative flex-1 max-w-sm w-full md:mx-4" id="global-search-container">
-          <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+        {/* Sidebar Menu Items */}
+        <nav className="flex-1 px-4 py-2 space-y-1">
+          {navigationItems.map((item) => {
+            const Icon = item.icon;
+            const isSelected = activeTab === item.id;
+            
+            return (
+              <button
+                key={item.id}
+                id={`nav-${item.id}`}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setSearchQuery("");
+                  setGlobalSearchQuery("");
+                }}
+                className={`w-full flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm transition cursor-pointer ${
+                  isSelected
+                    ? "border border-amber-600/50 text-amber-500 shadow-sm"
+                    : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                }`}
+              >
+                {/* No icon in mockup sidebar, keeping text clean */}
+                <span className={isSelected ? "font-semibold" : "font-medium"}>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
+
+      {/* 2. Main Content Area Right */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Header */}
+        <div className="bg-[#111111] border-b border-slate-800 p-4 flex justify-between items-center z-40">
+          
+          <div className="relative flex-1 max-w-sm" id="global-search-container">
             <input
               id="global-search-input"
               type="text"
-              placeholder="Search vehicles, drivers, or trips by ID or name..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setShowDropdown(true);
               }}
               onFocus={() => setShowDropdown(true)}
-              onBlur={() => {
-                // Give a small delay so selection click can fire first
-                setTimeout(() => setShowDropdown(false), 200);
-              }}
-              className="w-full bg-slate-800 text-slate-100 placeholder-slate-400 text-xs pl-9 pr-8 py-2 rounded-xl border border-slate-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+              onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+              className="w-full bg-transparent text-slate-100 placeholder-slate-600 text-sm px-4 py-1.5 rounded-md border border-slate-700 focus:outline-none focus:border-slate-500 transition"
             />
-            {searchQuery && (
-              <button
-                id="clear-global-search"
-                onClick={() => {
-                  setSearchQuery("");
-                  setGlobalSearchQuery("");
-                }}
-                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-200 transition"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+            
+            {showDropdown && searchQuery.trim() !== "" && (() => {
+              const query = searchQuery.trim().toLowerCase();
+              const matchedVehicles = vehicles.filter(v => v.id.toLowerCase().includes(query) || v.name.toLowerCase().includes(query) || v.registrationNumber.toLowerCase().includes(query));
+              const matchedDrivers = drivers.filter(d => d.id.toLowerCase().includes(query) || d.name.toLowerCase().includes(query) || d.licenseNumber.toLowerCase().includes(query));
+              const matchedTrips = trips.filter(t => t.id.toLowerCase().includes(query) || t.source.toLowerCase().includes(query) || t.destination.toLowerCase().includes(query));
+              const totalMatches = matchedVehicles.length + matchedDrivers.length + matchedTrips.length;
 
-          {/* Categorized Dropdown Overlay */}
-          {showDropdown && searchQuery.trim() !== "" && (() => {
-            const query = searchQuery.trim().toLowerCase();
-            const matchedVehicles = vehicles.filter(
-              v =>
-                v.id.toLowerCase().includes(query) ||
-                v.name.toLowerCase().includes(query) ||
-                v.registrationNumber.toLowerCase().includes(query)
-            );
-            const matchedDrivers = drivers.filter(
-              d =>
-                d.id.toLowerCase().includes(query) ||
-                d.name.toLowerCase().includes(query) ||
-                d.licenseNumber.toLowerCase().includes(query)
-            );
-            const matchedTrips = trips.filter(
-              t =>
-                t.id.toLowerCase().includes(query) ||
-                t.source.toLowerCase().includes(query) ||
-                t.destination.toLowerCase().includes(query)
-            );
-            const totalMatches = matchedVehicles.length + matchedDrivers.length + matchedTrips.length;
-
-            return (
-              <div 
-                id="global-search-dropdown" 
-                className="absolute top-full left-0 right-0 mt-2 bg-slate-950 text-slate-300 border border-slate-800 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-50 p-2 text-left animate-in fade-in slide-in-from-top-1 duration-150"
-              >
-                {totalMatches === 0 ? (
-                  <div className="p-4 text-center text-xs text-slate-500">
-                    No matching records for <span className="font-semibold text-slate-300">"{searchQuery}"</span>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {/* Vehicles Section */}
-                    {matchedVehicles.length > 0 && (
-                      <div>
-                        <div className="px-3 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-900/50 rounded-lg flex justify-between items-center">
-                          <span>Vehicles</span>
-                          <span className="bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-full text-[9px] font-mono">{matchedVehicles.length}</span>
-                        </div>
-                        <div className="mt-1 space-y-0.5">
-                          {matchedVehicles.slice(0, 5).map(v => (
-                            <button
-                              key={v.id}
-                              onMouseDown={() => {
-                                setActiveTab("vehicles");
-                                setGlobalSearchQuery(v.registrationNumber);
-                                setShowDropdown(false);
-                              }}
-                              className="w-full text-left px-3 py-2 rounded-xl text-xs hover:bg-slate-900 hover:text-white transition flex justify-between items-center cursor-pointer"
-                            >
-                              <div>
-                                <span className="font-bold text-slate-100 block">{v.name}</span>
-                                <span className="text-slate-400 block font-mono text-[10px]">{v.registrationNumber} • {v.type}</span>
-                              </div>
-                              <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Drivers Section */}
-                    {matchedDrivers.length > 0 && (
-                      <div>
-                        <div className="px-3 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-900/50 rounded-lg flex justify-between items-center">
-                          <span>Drivers</span>
-                          <span className="bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-full text-[9px] font-mono">{matchedDrivers.length}</span>
-                        </div>
-                        <div className="mt-1 space-y-0.5">
-                          {matchedDrivers.slice(0, 5).map(d => (
-                            <button
-                              key={d.id}
-                              onMouseDown={() => {
-                                setActiveTab("drivers");
-                                setGlobalSearchQuery(d.name);
-                                setShowDropdown(false);
-                              }}
-                              className="w-full text-left px-3 py-2 rounded-xl text-xs hover:bg-slate-900 hover:text-white transition flex justify-between items-center cursor-pointer"
-                            >
-                              <div>
-                                <span className="font-bold text-slate-100 block">{d.name}</span>
-                                <span className="text-slate-400 block font-mono text-[10px]">{d.licenseNumber} • {d.status}</span>
-                              </div>
-                              <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Trips Section */}
-                    {matchedTrips.length > 0 && (
-                      <div>
-                        <div className="px-3 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-900/50 rounded-lg flex justify-between items-center">
-                          <span>Trips</span>
-                          <span className="bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-full text-[9px] font-mono">{matchedTrips.length}</span>
-                        </div>
-                        <div className="mt-1 space-y-0.5">
-                          {matchedTrips.slice(0, 5).map(t => (
-                            <button
-                              key={t.id}
-                              onMouseDown={() => {
-                                setActiveTab("trips");
-                                setGlobalSearchQuery(t.id);
-                                setShowDropdown(false);
-                              }}
-                              className="w-full text-left px-3 py-2 rounded-xl text-xs hover:bg-slate-900 hover:text-white transition flex justify-between items-center cursor-pointer"
-                            >
-                              <div>
-                                <span className="font-bold text-slate-100 block">{t.source} → {t.destination}</span>
-                                <span className="text-slate-400 block font-mono text-[10px]">ID: {t.id} • Status: {t.status}</span>
-                              </div>
-                              <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-        </div>
-
-        {/* User Profile & Logout */}
-        <div className="flex items-center gap-4 flex-wrap ml-auto">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400">
-              <User className="w-4 h-4" />
-            </div>
-            <div className="hidden lg:block text-right mr-2">
-              <span className="block text-xs font-bold text-slate-200">{user.name}</span>
-              <span className="block text-[10px] text-slate-400 font-mono tracking-wide">{user.role}</span>
-            </div>
-          </div>
-
-          <button
-            onClick={logout}
-            title="Secure Logout"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/20 rounded-lg transition text-xs font-semibold cursor-pointer"
-          >
-            <Power className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Logout</span>
-          </button>
-
-          <button
-            onClick={loadData}
-            title="Sync Database"
-            className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg transition shrink-0 ml-1 cursor-pointer"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-          </button>
-        </div>
-      </div>
-
-      {/* 2. Main Sidebar & Content Canvas Area */}
-      <div className="flex-1 flex">
-        {/* Dynamic Sidebar */}
-        <aside className={`bg-slate-900 border-r border-slate-800 text-slate-400 w-64 flex flex-col transition-all shrink-0 ${sidebarOpen ? "block" : "hidden md:block"}`}>
-          {/* Sidebar Menu Items */}
-          <nav className="flex-1 px-3 py-4 space-y-1">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              const isSelected = activeTab === item.id;
-              
               return (
-                <button
-                  key={item.id}
-                  id={`nav-${item.id}`}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    setSearchQuery("");
-                    setGlobalSearchQuery("");
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition cursor-pointer ${
-                    isSelected
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "hover:bg-slate-800 hover:text-slate-200"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.label}</span>
-                </button>
+                <div id="global-search-dropdown" className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl max-h-96 overflow-y-auto z-50 p-2 text-left">
+                  {totalMatches === 0 ? (
+                    <div className="p-4 text-center text-xs text-slate-500">No matches for "{searchQuery}"</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {matchedVehicles.length > 0 && matchedVehicles.slice(0, 3).map(v => (
+                        <button key={v.id} onMouseDown={() => { setActiveTab("vehicles"); setGlobalSearchQuery(v.registrationNumber); setShowDropdown(false); }} className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-800 text-xs">Vehicles: {v.name}</button>
+                      ))}
+                      {matchedDrivers.length > 0 && matchedDrivers.slice(0, 3).map(d => (
+                        <button key={d.id} onMouseDown={() => { setActiveTab("drivers"); setGlobalSearchQuery(d.name); setShowDropdown(false); }} className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-800 text-xs">Drivers: {d.name}</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               );
-            })}
-          </nav>
-
-          {/* Connected Database Footer in Sidebar */}
-          <div className="p-4 border-t border-slate-800 text-xs flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-              <span className="font-semibold text-slate-400">TransitOps Server</span>
-            </div>
-            <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-              API connections check and transaction guards run atomically on Node/Express server.
-            </p>
+            })()}
           </div>
-        </aside>
+
+          <div className="flex items-center gap-4">
+            <span className="text-xs text-slate-400 font-medium">{user.name}</span>
+            <div className="flex items-center gap-2 border border-slate-700 rounded-full pl-3 pr-1 py-1">
+              <span className="text-xs text-slate-400">{user.role.replace("_", " ")}</span>
+              <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold">
+                {user.name.split(" ").map(n => n[0]).join("")}
+              </div>
+            </div>
+            <button onClick={logout} className="text-xs text-red-400 hover:text-red-300 ml-2">Logout</button>
+          </div>
+        </div>
 
         {/* Primary Views Stage canvas */}
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-[#111111]">
           {isLoading && vehicles.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-slate-400">
-              <RefreshCw className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-              <p className="text-sm font-semibold">Synchronizing Logistics Database...</p>
+            <div className="flex flex-col items-center justify-center py-24 text-slate-500">
+              <RefreshCw className="w-8 h-8 animate-spin mb-4" />
+              <p className="text-sm">Loading Data...</p>
             </div>
           ) : (
             <div className="max-w-7xl mx-auto animate-in fade-in duration-300">
-              {activeTab === "dashboard" && (
+              {(activeTab === "dashboard" || (!allNavigationItems.some(i => i.id === activeTab))) && (
                 <DashboardView
                   kpis={kpis}
                   vehicles={vehicles}
@@ -594,6 +447,10 @@ export default function App() {
                   activeRole={user.role}
                   onNavigate={setActiveTab}
                 />
+              )}
+
+              {allNavigationItems.some(i => i.id === activeTab) && !navigationItems.some(i => i.id === activeTab) && activeTab !== "dashboard" && (
+                <AccessDenied />
               )}
 
               {activeTab === "vehicles" && (

@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   id VARCHAR(255) PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255) NOT NULL UNIQUE,
-  password VARCHAR(255) NOT NULL,
+  passwordHash VARCHAR(255) NOT NULL,
   role VARCHAR(50) NOT NULL
 );
 
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS expenses (
 );
 
 -- Seed Data (Default Users)
-INSERT IGNORE INTO users (id, name, email, password, role) VALUES 
+INSERT IGNORE INTO users (id, name, email, passwordHash, role) VALUES 
 ('u-1', 'Sarah Connor', 'fleet.manager@transitops.dev', '$2a$10$B00K5aP0g.OQ8O9.v/Y36.1xYFp8D86L2qL07xS.b2F5c7u3p/PcG', 'FLEET_MANAGER'),
 ('u-2', 'James Holden', 'dispatcher@transitops.dev', '$2a$10$B00K5aP0g.OQ8O9.v/Y36.1xYFp8D86L2qL07xS.b2F5c7u3p/PcG', 'DISPATCHER'),
 ('u-3', 'Naomi Nagata', 'safety.officer@transitops.dev', '$2a$10$B00K5aP0g.OQ8O9.v/Y36.1xYFp8D86L2qL07xS.b2F5c7u3p/PcG', 'SAFETY_OFFICER'),

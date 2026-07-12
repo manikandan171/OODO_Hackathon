@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Fuel, DollarSign, Calendar, FileText, Filter, AlertTriangle, Truck, Tag, Navigation, Bookmark } from "lucide-react";
+import { Plus, Fuel, IndianRupee, Calendar, FileText, Filter, AlertTriangle, Truck, Tag, Navigation, Bookmark, DollarSign } from "lucide-react";
 import { Role, FuelLog, Expense, Vehicle } from "../types";
 
 interface FuelExpensesViewProps {
@@ -105,21 +105,19 @@ export default function FuelExpensesView({
       <div className="flex border-b border-slate-200 gap-1.5">
         <button
           onClick={() => { setActiveTab("FUEL"); setError(null); }}
-          className={`px-4 py-2 text-sm font-semibold border-b-2 transition ${
-            activeTab === "FUEL" 
-              ? "border-blue-600 text-blue-600" 
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition ${activeTab === "FUEL"
+              ? "border-blue-600 text-blue-600"
               : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
+            }`}
         >
           ⛽ Fuel Refill Logs ({fuelLogs.length})
         </button>
         <button
           onClick={() => { setActiveTab("EXPENSE"); setError(null); }}
-          className={`px-4 py-2 text-sm font-semibold border-b-2 transition ${
-            activeTab === "EXPENSE" 
-              ? "border-blue-600 text-blue-600" 
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition ${activeTab === "EXPENSE"
+              ? "border-blue-600 text-blue-600"
               : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
+            }`}
         >
           💵 Operational Expenses ({expenses.length})
         </button>
@@ -307,7 +305,7 @@ export default function FuelExpensesView({
                           <span className="text-xs text-slate-400 block mt-0.5">{vehicle?.name || "Manual Log"}</span>
                         </td>
                         <td className="px-6 py-4 font-mono whitespace-nowrap">{log.liters} L</td>
-                        <td className="px-6 py-4 font-mono whitespace-nowrap text-blue-600 font-bold">${log.cost}</td>
+                        <td className="px-6 py-4 font-mono whitespace-nowrap text-blue-600 font-bold">₹{log.cost}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {log.tripId ? (
                             <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-sm uppercase font-mono">
@@ -366,7 +364,7 @@ export default function FuelExpensesView({
                             {exp.category}
                           </span>
                         </td>
-                        <td className="px-6 py-4 font-mono whitespace-nowrap text-emerald-700 font-bold">${exp.amount}</td>
+                        <td className="px-6 py-4 font-mono whitespace-nowrap text-emerald-700 font-bold">₹{exp.amount}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {exp.tripId ? (
                             <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-sm uppercase font-mono">
@@ -386,7 +384,7 @@ export default function FuelExpensesView({
                   {expenses.length === 0 && (
                     <tr>
                       <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
-                        <DollarSign className="w-12 h-12 text-slate-200 mx-auto mb-2" />
+                        <IndianRupee className="w-12 h-12 text-slate-200 mx-auto mb-2" />
                         <p className="text-sm font-semibold">General operational expense ledger empty.</p>
                       </td>
                     </tr>

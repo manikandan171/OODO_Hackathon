@@ -150,30 +150,30 @@ export default function DriversView({
     }
   };
 
-  const getStatusBadge = (status: DriverStatus) => {
+  const getWireframeBadge = (status: DriverStatus) => {
     switch (status) {
       case DriverStatus.AVAILABLE:
         return (
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Available
+          <span className="inline-flex justify-center w-24 text-xs font-semibold px-2 py-1 rounded-md bg-[#22c55e] text-black border border-transparent shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            Available
           </span>
         );
       case DriverStatus.ON_TRIP:
         return (
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> On Route
+          <span className="inline-flex justify-center w-24 text-xs font-semibold px-2 py-1 rounded-md bg-[#3b82f6] text-black border border-transparent shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            On Trip
           </span>
         );
       case DriverStatus.OFF_DUTY:
         return (
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Off Duty
+          <span className="inline-flex justify-center w-24 text-xs font-semibold px-2 py-1 rounded-md bg-[#6b7280] text-black border border-transparent shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            Off Duty
           </span>
         );
       case DriverStatus.SUSPENDED:
         return (
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 uppercase font-mono tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Suspended
+          <span className="inline-flex justify-center w-24 text-xs font-semibold px-2 py-1 rounded-md bg-[#f97316] text-black border border-transparent shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            Suspended
           </span>
         );
       default:
@@ -181,188 +181,95 @@ export default function DriversView({
     }
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 85) return "text-emerald-600 bg-emerald-50 border-emerald-200";
-    if (score >= 75) return "text-amber-600 bg-amber-50 border-amber-200";
-    return "text-rose-600 bg-rose-50 border-rose-200";
-  };
-
   const canEdit = activeRole === Role.FLEET_MANAGER || activeRole === Role.SAFETY_OFFICER;
   const canSuspend = activeRole === Role.SAFETY_OFFICER;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Operator Manifest</h1>
-          <p className="text-sm text-slate-500 mt-1">Audit certifications, verify safety metrics, and guard active shift rosters.</p>
-        </div>
+    <div className="bg-[#1a1a1a] min-h-[calc(100vh-4rem)] p-8 text-gray-300 font-sans tracking-wide rounded-lg">
+      {/* Header and Add Button */}
+      <div className="flex justify-end mb-8">
         {canEdit && (
           <button
-            id="register-driver-btn"
             onClick={handleOpenAdd}
-            className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer"
+            className="bg-[#f97316] hover:bg-[#ea580c] text-white px-5 py-2 rounded-lg font-bold shadow-md transition"
           >
-            <Plus className="w-4 h-4" /> Enroll New Operator
+            + Add Driver
           </button>
         )}
       </div>
 
-      {/* Filters Card */}
-      <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Search */}
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-          <input
-            id="driver-search"
-            type="text"
-            placeholder="Search operator name or license..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full text-sm pl-9 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
-          />
-        </div>
-
-        {/* Status Filter */}
-        <div className="flex items-center gap-2">
-          <User className="w-4 h-4 text-slate-400 shrink-0" />
-          <select
-            id="driver-filter-status"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full text-sm py-2 px-3 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
-          >
-            <option value="ALL">All Manifest Statuses</option>
-            <option value="AVAILABLE">Available Only</option>
-            <option value="ON_TRIP">Out on Active Route</option>
-            <option value="OFF_DUTY">Off Duty / Off Roster</option>
-            <option value="SUSPENDED">Suspended / Restricted</option>
-          </select>
-        </div>
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm border-collapse">
+          <thead>
+            <tr className="border-b border-gray-700 text-gray-500 uppercase text-xs tracking-wider">
+              <th className="py-4 px-2 font-medium">DRIVER</th>
+              <th className="py-4 px-2 font-medium">LICENSE NO</th>
+              <th className="py-4 px-2 font-medium">CATEGOR</th>
+              <th className="py-4 px-2 font-medium">EXPIRY</th>
+              <th className="py-4 px-2 font-medium">CONTACT</th>
+              <th className="py-4 px-2 font-medium">TRIP COMPL.</th>
+              <th className="py-4 px-2 font-medium">SAFETY</th>
+              <th className="py-4 px-2 font-medium">STATUS</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-800">
+            {filteredDrivers.map(d => (
+              <tr key={d.id} className="hover:bg-[#222222] transition-colors cursor-pointer" onClick={() => canEdit && handleOpenEdit(d)}>
+                <td className="py-4 px-2 text-white">{d.name}</td>
+                <td className="py-4 px-2">{d.licenseNumber}</td>
+                <td className="py-4 px-2">{d.licenseCategory}</td>
+                <td className="py-4 px-2">
+                  <div className="flex items-center gap-2">
+                    {d.licenseExpiryDate}
+                    {new Date(d.licenseExpiryDate) < new Date() && <span className="text-xs uppercase text-white font-bold">EXPIRE</span>}
+                  </div>
+                </td>
+                <td className="py-4 px-2">{d.contactNumber}</td>
+                <td className="py-4 px-2">{d.safetyScore}%</td>
+                <td className="py-4 px-2">{getWireframeBadge(d.status)}</td>
+                <td className="py-4 px-2">{getWireframeBadge(d.status)}</td>
+              </tr>
+            ))}
+            {filteredDrivers.length === 0 && (
+              <tr>
+                <td colSpan={8} className="py-8 text-center text-gray-500">
+                  No drivers found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* Grid of Operators - Bento layout for creative unique feel! */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredDrivers.map((d) => (
-          <div key={d.id} className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col justify-between hover:border-slate-200 transition-all custom-glow">
-            {/* Top Identity bar */}
-            <div>
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 uppercase shrink-0">
-                    {d.name.split(" ").map(n => n[0]).join("")}
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-slate-900 leading-tight">{d.name}</h2>
-                    <span className="text-xs font-mono font-medium text-slate-400 mt-1 block">ID: {d.id}</span>
-                  </div>
-                </div>
-                {getStatusBadge(d.status)}
-              </div>
-
-              {/* Stats/Metas Bento Section */}
-              <div className="mt-5 grid grid-cols-2 gap-3.5 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Safety Score</span>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <Award className="w-4 h-4 text-amber-500 shrink-0" />
-                    <span className={`text-sm font-bold font-mono px-2 py-0.5 rounded-md border ${getScoreColor(d.safetyScore)}`}>
-                      {d.safetyScore}/100
-                    </span>
-                  </div>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Classification</span>
-                  <div className="flex items-center gap-1.5 mt-1.5 text-sm font-bold text-slate-700">
-                    <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 font-mono text-xs">
-                      {d.licenseCategory}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Verification Info */}
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
-                  <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span>{d.contactNumber}</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-slate-600">
-                  <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-semibold text-slate-500 font-mono">Lic: {d.licenseNumber}</span>
-                    {getLicenseBadge(d.licenseExpiryDate)}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Actions section */}
-            <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
-              <div>
-                {canSuspend && (
-                  <button
-                    id={`suspend-btn-${d.id}`}
-                    onClick={() => handleToggleSuspend(d)}
-                    disabled={d.status === DriverStatus.ON_TRIP}
-                    className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition ${
-                      d.status === DriverStatus.SUSPENDED
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100 hover:text-emerald-800"
-                        : d.status === DriverStatus.ON_TRIP
-                        ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed"
-                        : "bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100 hover:text-rose-800"
-                    }`}
-                  >
-                    {d.status === DriverStatus.SUSPENDED ? (
-                      <>
-                        <ShieldCheck className="w-3.5 h-3.5" /> Reinstate Driver
-                      </>
-                    ) : (
-                      <>
-                        <ShieldAlert className="w-3.5 h-3.5" /> Suspend Driver
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-
-              <div className="flex gap-1">
-                {canEdit && (
-                  <button
-                    id={`edit-driver-${d.id}`}
-                    onClick={() => handleOpenEdit(d)}
-                    title="Edit operator profile"
-                    className="p-1.5 hover:bg-slate-50 text-slate-500 hover:text-blue-600 rounded-lg border border-transparent hover:border-slate-200 transition"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {filteredDrivers.length === 0 && (
-          <div className="col-span-full py-16 bg-white border border-slate-100 rounded-2xl text-center text-slate-400 shadow-xs">
-            <User className="w-12 h-12 text-slate-200 mx-auto mb-2" />
-            <p className="text-sm font-semibold">No operators registered.</p>
-            <p className="text-xs text-slate-400 mt-1 font-medium">Verify spelling or change active manifest filter.</p>
-          </div>
-        )}
+      {/* Toggle Stat */}
+      <div className="mt-12 space-y-4">
+        <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold">TOGGLE STAT</div>
+        <div className="flex flex-wrap items-center gap-4">
+          <button onClick={() => setFilterStatus("AVAILABLE")} className={`px-4 py-1.5 rounded-lg text-black font-semibold text-sm transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${filterStatus === 'AVAILABLE' || filterStatus === 'ALL' ? 'bg-[#22c55e]' : 'bg-[#22c55e] opacity-50'}`}>Available</button>
+          <button onClick={() => setFilterStatus("ON_TRIP")} className={`px-4 py-1.5 rounded-lg text-black font-semibold text-sm transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${filterStatus === 'ON_TRIP' || filterStatus === 'ALL' ? 'bg-[#3b82f6]' : 'bg-[#3b82f6] opacity-50'}`}>On Trip</button>
+          <button onClick={() => setFilterStatus("OFF_DUTY")} className={`px-4 py-1.5 rounded-lg text-black font-semibold text-sm transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${filterStatus === 'OFF_DUTY' || filterStatus === 'ALL' ? 'bg-[#6b7280]' : 'bg-[#6b7280] opacity-50'}`}>Off Duty</button>
+          <button onClick={() => setFilterStatus("SUSPENDED")} className={`px-4 py-1.5 rounded-lg text-black font-semibold text-sm transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${filterStatus === 'SUSPENDED' || filterStatus === 'ALL' ? 'bg-[#f97316]' : 'bg-[#f97316] opacity-50'}`}>Suspended</button>
+          {filterStatus !== "ALL" && (
+            <button onClick={() => setFilterStatus("ALL")} className="px-4 py-1.5 rounded-lg text-gray-400 font-semibold border border-gray-700 hover:text-white text-sm">Clear</button>
+          )}
+        </div>
+        <div className="text-[#f97316] text-sm mt-4 font-mono">
+          Rule: Expired license or Suspended status → blocked from trip assignment
+        </div>
       </div>
 
       {/* Add / Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-100 shadow-xl overflow-hidden animate-in fade-in zoom-in duration-150">
-            <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h2 className="text-lg font-bold text-slate-900">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-[#1e1e1e] rounded-2xl max-w-lg w-full border border-gray-700 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-150">
+            <div className="px-6 py-5 border-b border-gray-700 flex justify-between items-center bg-[#252525]">
+              <h2 className="text-lg font-bold text-gray-100">
                 {modalMode === "ADD" ? "Enroll Fleet Operator" : "Update Operator Credentials"}
               </h2>
               <button 
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 text-lg font-bold p-1 rounded-lg hover:bg-slate-200 transition"
+                className="text-gray-400 hover:text-gray-200 text-lg font-bold p-1 rounded-lg hover:bg-gray-700 transition"
               >
                 ✕
               </button>
@@ -370,14 +277,14 @@ export default function DriversView({
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {error && (
-                <div className="p-3 bg-rose-50 border border-rose-100 rounded-lg flex gap-2 text-rose-600 text-xs font-semibold">
+                <div className="p-3 bg-red-900/30 border border-red-500/30 rounded-lg flex gap-2 text-red-400 text-xs font-semibold">
                   <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Full Legal Name</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Full Legal Name</label>
                 <input
                   id="modal-driver-name"
                   type="text"
@@ -385,13 +292,13 @@ export default function DriversView({
                   placeholder="e.g. Alex Kamal"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                  className="w-full text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] transition"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">License # / Reference</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">License # / Reference</label>
                   <input
                     id="modal-driver-license"
                     type="text"
@@ -400,16 +307,16 @@ export default function DriversView({
                     disabled={modalMode === "EDIT"}
                     value={licenseNo}
                     onChange={(e) => setLicenseNo(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 disabled:bg-slate-100 transition"
+                    className="w-full text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] disabled:opacity-50 transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">License Category</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">License Category</label>
                   <select
                     id="modal-driver-cat"
                     value={licenseCat}
                     onChange={(e) => setLicenseCat(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] transition"
                   >
                     <option value="LMV">LMV (Light Motor Vehicle)</option>
                     <option value="HMV">HMV (Heavy Motor Vehicle)</option>
@@ -420,18 +327,18 @@ export default function DriversView({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">License Expiration Date</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">License Expiration Date</label>
                   <input
                     id="modal-driver-expiry"
                     type="date"
                     required
                     value={licenseExpiry}
                     onChange={(e) => setLicenseExpiry(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Operator Contact Phone</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Operator Contact Phone</label>
                   <input
                     id="modal-driver-phone"
                     type="text"
@@ -439,13 +346,13 @@ export default function DriversView({
                     placeholder="e.g. +1-555-0100"
                     value={contact}
                     onChange={(e) => setContact(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] transition"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Assigned Safety Score (0-100)</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Assigned Safety Score (0-100)</label>
                 <input
                   id="modal-driver-safety"
                   type="number"
@@ -455,22 +362,22 @@ export default function DriversView({
                   placeholder="e.g. 95"
                   value={safetyScore}
                   onChange={(e) => setSafetyScore(e.target.value)}
-                  className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                  className="w-full text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] transition"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:bg-slate-50 transition cursor-pointer"
+                  className="px-4 py-2 border border-gray-600 text-gray-300 text-sm font-semibold rounded-xl hover:bg-gray-800 transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   id="modal-driver-submit"
                   type="submit"
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition shadow-xs cursor-pointer"
+                  className="px-5 py-2 bg-[#f97316] hover:bg-[#ea580c] text-white text-sm font-semibold rounded-xl transition shadow-md cursor-pointer"
                 >
                   {modalMode === "ADD" ? "Register Operator" : "Apply Credentials"}
                 </button>

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Search, Wrench, AlertTriangle, ShieldCheck, DollarSign, Calendar, Clock, Gauge, Filter, Eye } from "lucide-react";
+import { Plus, Search, Wrench, AlertTriangle, ShieldCheck, IndianRupee, Calendar, Clock, Gauge, Filter, Eye } from "lucide-react";
 import { Role, MaintenanceLog, MaintenanceStatus, Vehicle } from "../types";
 
 interface MaintenanceViewProps {
@@ -219,8 +219,8 @@ export default function MaintenanceView({
                     </td>
                     <td className="px-6 py-4 font-mono font-semibold text-slate-700 whitespace-nowrap">
                       <div className="flex items-center text-slate-600 font-medium">
-                        <DollarSign className="w-3.5 h-3.5 text-slate-400 -mr-0.5" />
-                        <span>{log.cost.toLocaleString()}</span>
+                        <IndianRupee className="w-3.5 h-3.5 text-slate-400 -mr-0.5" />
+                        <span>₹{log.cost.toLocaleString()}</span>
                         {log.status === MaintenanceStatus.OPEN && (
                           <span className="text-[10px] text-slate-400 font-sans font-normal ml-1">(Est.)</span>
                         )}
@@ -317,7 +317,7 @@ export default function MaintenanceView({
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Estimated Invoiced Cost ($)</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Estimated Invoiced Cost (₹)</label>
                 <input
                   id="modal-maint-cost"
                   type="number"
@@ -386,7 +386,7 @@ export default function MaintenanceView({
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Final Invoiced Cost ($)</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Final Invoiced Cost (₹)</label>
                 <input
                   id="modal-resolve-cost"
                   type="number"
