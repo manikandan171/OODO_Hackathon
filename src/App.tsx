@@ -324,8 +324,7 @@ export default function App() {
     { id: "live-tracking", label: "Live Tracking", icon: MapPin, roles: [Role.DISPATCHER, Role.FLEET_MANAGER] },
     { id: "maintenance", label: "Maintenance", icon: Wrench, roles: [Role.FLEET_MANAGER] },
     { id: "fuel-expenses", label: "Fuel & Expenses", icon: IndianRupee, roles: [Role.FINANCIAL_ANALYST, Role.FLEET_MANAGER] },
-    { id: "reports", label: "Analytics", icon: BarChart3, roles: [Role.FINANCIAL_ANALYST] },
-    { id: "settings", label: "Settings", icon: Truck } // Mockup shows Settings tab, though non-functional for now
+    { id: "reports", label: "Analytics", icon: BarChart3, roles: [Role.FINANCIAL_ANALYST] }
   ];
 
   const navigationItems = user 
@@ -334,29 +333,73 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-slate-400">
-        <RefreshCw className="w-12 h-12 animate-spin mb-4" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a]">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <Truck className="w-6 h-6 text-slate-200" />
+          </div>
+          <RefreshCw className="w-6 h-6 animate-spin text-blue-400" />
+          <p className="text-sm text-slate-500 tracking-wider uppercase">Loading TransitOps</p>
+        </motion.div>
       </div>
     );
   }
 
   if (!user) {
-    return <LoginView />;
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        <LoginView />
+      </motion.div>
+    );
   }
+
+  // Role-specific accent colors
+  const roleAccent = {
+    [Role.FLEET_MANAGER]: { bg: "bg-blue-500/15", text: "text-blue-400", border: "border-blue-500/30", dot: "bg-blue-400" },
+    [Role.DISPATCHER]: { bg: "bg-emerald-500/15", text: "text-emerald-400", border: "border-emerald-500/30", dot: "bg-emerald-400" },
+    [Role.SAFETY_OFFICER]: { bg: "bg-amber-500/15", text: "text-amber-400", border: "border-amber-500/30", dot: "bg-amber-400" },
+    [Role.FINANCIAL_ANALYST]: { bg: "bg-purple-500/15", text: "text-purple-400", border: "border-purple-500/30", dot: "bg-purple-400" },
+  };
+  const accent = roleAccent[user.role] || roleAccent[Role.FLEET_MANAGER];
 
   return (
     <div className="min-h-screen flex bg-[#111111] text-slate-300 font-sans">
       {/* 1. Sidebar Left */}
-      <aside className={`bg-[#111111] border-r border-slate-800 text-slate-400 w-64 flex flex-col transition-all shrink-0 ${sidebarOpen ? "block" : "hidden md:block"}`}>
-        <div className="p-6">
-          <div className="flex items-center gap-3">
-            <span className="font-medium text-xl text-slate-200 tracking-tight" style={{ fontFamily: "cursive, sans-serif" }}>TransitOps</span>
+      <aside className={`bg-[#0d0d0d] border-r border-slate-800/50 text-slate-400 w-60 flex flex-col transition-all shrink-0 ${sidebarOpen ? "block" : "hidden md:block"}`}>
+        <div className="p-5 pb-3">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4 }}
+            className="flex items-center gap-3"
+          >
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md shadow-blue-500/20">
+              <Truck className="w-4 h-4 text-slate-200" />
+            </div>
+            <span className="font-semibold text-lg text-slate-200 tracking-tight">TransitOps</span>
+          </motion.div>
+          <p className="text-[10px] text-slate-600 mt-1 ml-11 tracking-wider uppercase">Fleet Platform</p>
+        </div>
+
+        <div className="px-4 py-2">
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${accent.bg} border ${accent.border}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${accent.dot} animate-pulse`}></span>
+            <span className={`text-[10px] font-bold tracking-wider uppercase ${accent.text}`}>{user.role.replace(/_/g, " ")}</span>
           </div>
         </div>
 
         {/* Sidebar Menu Items */}
-        <nav className="flex-1 px-4 py-2 space-y-1">
-          {navigationItems.map((item) => {
+        <nav className="flex-1 px-3 py-3 space-y-0.5">
+          {navigationItems.map((item, idx) => {
             const Icon = item.icon;
             const isSelected = activeTab === item.id;
             
@@ -364,37 +407,55 @@ export default function App() {
               <motion.button
                 key={item.id}
                 id={`nav-${item.id}`}
-                whileHover={{ x: 4, scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05, duration: 0.3 }}
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => {
                   setActiveTab(item.id);
                   setSearchQuery("");
                   setGlobalSearchQuery("");
                 }}
-                className={`w-full flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm transition cursor-pointer ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition cursor-pointer ${
                   isSelected
-                    ? "border border-amber-600/50 text-amber-500 shadow-sm bg-amber-900/10"
-                    : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                    ? "bg-[#1a1a1a]/[0.07] text-slate-200 font-semibold shadow-sm"
+                    : "text-slate-500 hover:bg-[#1a1a1a]/[0.04] hover:text-slate-300"
                 }`}
               >
-                {/* No icon in mockup sidebar, keeping text clean */}
-                <span className={isSelected ? "font-semibold" : "font-medium"}>{item.label}</span>
+                <Icon className={`w-4 h-4 shrink-0 ${isSelected ? "text-blue-400" : ""}`} />
+                <span>{item.label}</span>
+                {isSelected && <ChevronRight className="w-3 h-3 ml-auto text-slate-600" />}
               </motion.button>
             );
           })}
         </nav>
+
+        {/* Connected indicator */}
+        <div className="p-4 border-t border-slate-800/50">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="text-[10px] text-slate-500 font-medium">MySQL Connected • Real-time Sync</span>
+          </div>
+        </div>
       </aside>
 
       {/* 2. Main Content Area Right */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <div className="bg-[#111111] border-b border-slate-800 p-4 flex justify-between items-center z-40">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="bg-[#0d0d0d] border-b border-slate-800/50 px-6 py-3 flex justify-between items-center z-40"
+        >
           
-          <div className="relative flex-1 max-w-sm" id="global-search-container">
+          <div className="relative flex-1 max-w-md" id="global-search-container">
+            <Search className="absolute left-3 top-2 w-4 h-4 text-slate-600" />
             <input
               id="global-search-input"
               type="text"
-              placeholder="Search..."
+              placeholder="Search vehicles, drivers, trips..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -402,7 +463,7 @@ export default function App() {
               }}
               onFocus={() => setShowDropdown(true)}
               onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-              className="w-full bg-transparent text-slate-100 placeholder-slate-600 text-sm px-4 py-1.5 rounded-md border border-slate-700 focus:outline-none focus:border-slate-500 transition"
+              className="w-full bg-[#1a1a1a]/[0.04] text-slate-100 placeholder-slate-600 text-sm pl-10 pr-4 py-2 rounded-lg border border-slate-800 focus:outline-none focus:border-slate-600 focus:bg-[#1a1a1a]/[0.06] transition"
             />
             
             {showDropdown && searchQuery.trim() !== "" && (() => {
@@ -413,16 +474,19 @@ export default function App() {
               const totalMatches = matchedVehicles.length + matchedDrivers.length + matchedTrips.length;
 
               return (
-                <div id="global-search-dropdown" className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl max-h-96 overflow-y-auto z-50 p-2 text-left">
+                <div id="global-search-dropdown" className="absolute top-full left-0 right-0 mt-2 bg-[#1a1a1a] border border-slate-800 rounded-lg shadow-2xl shadow-black/50 max-h-96 overflow-y-auto z-50 p-2 text-left">
                   {totalMatches === 0 ? (
                     <div className="p-4 text-center text-xs text-slate-500">No matches for "{searchQuery}"</div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       {matchedVehicles.length > 0 && matchedVehicles.slice(0, 3).map(v => (
-                        <button key={v.id} onMouseDown={() => { setActiveTab("vehicles"); setGlobalSearchQuery(v.registrationNumber); setShowDropdown(false); }} className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-800 text-xs">Vehicles: {v.name}</button>
+                        <button key={v.id} onMouseDown={() => { setActiveTab("vehicles"); setGlobalSearchQuery(v.registrationNumber); setShowDropdown(false); }} className="w-full text-left px-3 py-2 rounded-md hover:bg-[#1a1a1a]/[0.06] text-xs flex items-center gap-2"><Truck className="w-3 h-3 text-blue-400" />{v.name} <span className="text-slate-600">({v.registrationNumber})</span></button>
                       ))}
                       {matchedDrivers.length > 0 && matchedDrivers.slice(0, 3).map(d => (
-                        <button key={d.id} onMouseDown={() => { setActiveTab("drivers"); setGlobalSearchQuery(d.name); setShowDropdown(false); }} className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-800 text-xs">Drivers: {d.name}</button>
+                        <button key={d.id} onMouseDown={() => { setActiveTab("drivers"); setGlobalSearchQuery(d.name); setShowDropdown(false); }} className="w-full text-left px-3 py-2 rounded-md hover:bg-[#1a1a1a]/[0.06] text-xs flex items-center gap-2"><Users className="w-3 h-3 text-emerald-400" />{d.name} <span className="text-slate-600">({d.licenseNumber})</span></button>
+                      ))}
+                      {matchedTrips.length > 0 && matchedTrips.slice(0, 3).map(t => (
+                        <button key={t.id} onMouseDown={() => { setActiveTab("trips"); setGlobalSearchQuery(t.source); setShowDropdown(false); }} className="w-full text-left px-3 py-2 rounded-md hover:bg-[#1a1a1a]/[0.06] text-xs flex items-center gap-2"><Navigation className="w-3 h-3 text-amber-400" />{t.source} → {t.destination}</button>
                       ))}
                     </div>
                   )}
@@ -431,17 +495,34 @@ export default function App() {
             })()}
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-slate-400 font-medium">{user.name}</span>
-            <div className="flex items-center gap-2 border border-slate-700 rounded-full pl-3 pr-1 py-1">
-              <span className="text-xs text-slate-400">{user.role.replace("_", " ")}</span>
-              <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold">
+          <div className="flex items-center gap-3 ml-6">
+            <motion.button
+              whileHover={{ rotate: 180 }}
+              transition={{ duration: 0.5 }}
+              onClick={() => loadData()}
+              className="p-2 rounded-lg hover:bg-[#1a1a1a]/[0.04] text-slate-500 hover:text-slate-300 transition cursor-pointer"
+              title="Refresh data"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+            </motion.button>
+            <div className="h-5 w-px bg-slate-800"></div>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-[10px] font-bold text-slate-200 shadow-md">
                 {user.name.split(" ").map(n => n[0]).join("")}
               </div>
+              <span className="text-xs text-slate-400 font-medium hidden md:block">{user.name}</span>
             </div>
-            <button onClick={logout} className="text-xs text-red-400 hover:text-red-300 ml-2">Logout</button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={logout}
+              className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-400 px-2 py-1.5 rounded-lg hover:bg-red-500/10 transition cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">Logout</span>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Primary Views Stage canvas */}
         <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-[#111111]">
@@ -454,10 +535,10 @@ export default function App() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
                 className="max-w-7xl mx-auto"
               >
                 {(activeTab === "dashboard" || (!allNavigationItems.some(i => i.id === activeTab))) && (

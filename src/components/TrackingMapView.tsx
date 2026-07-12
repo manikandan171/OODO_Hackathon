@@ -114,7 +114,7 @@ export default function TrackingMapView({
 
       // Render custom DivIcon
       const markerHtml = `
-        <div class="relative flex items-center justify-center w-8 h-8 rounded-full border-2 border-white shadow-lg bg-blue-600 animate-pulse-ring" style="background-color: #2563eb;">
+        <div class="relative flex items-center justify-center w-8 h-8 rounded-full border-2 border-slate-700 shadow-lg bg-blue-600 animate-pulse-ring" style="background-color: #2563eb;">
           <span style="font-size: 14px; line-height: 1;">🚚</span>
         </div>
       `;
@@ -136,7 +136,7 @@ export default function TrackingMapView({
 
       // Update popup content
       const popupHtml = `
-        <div class="font-sans p-1 text-slate-800" style="min-width: 180px;">
+        <div class="font-sans p-1 text-slate-300" style="min-width: 180px;">
           <div class="font-bold text-sm text-blue-600 flex items-center gap-1.5 mb-1">
             🚚 ${regNo}
           </div>
@@ -176,7 +176,7 @@ export default function TrackingMapView({
         }
       />
 
-      <div className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-xl relative">
+      <div className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl shadow-black/50 relative">
         {/* Leaflet Container */}
         <div 
           ref={mapContainerRef} 
@@ -185,7 +185,7 @@ export default function TrackingMapView({
 
         {/* Floating Legends */}
         <div className="absolute top-4 left-4 z-20 bg-slate-900/95 backdrop-blur-md p-4 rounded-xl border border-slate-800 shadow-lg text-slate-200 text-xs font-sans space-y-2">
-          <div className="font-bold text-sm text-white flex items-center gap-1.5 border-b border-slate-800 pb-2">
+          <div className="font-bold text-sm text-slate-200 flex items-center gap-1.5 border-b border-slate-800 pb-2">
             <Navigation className="w-4 h-4 text-blue-500" /> Control Console
           </div>
           <div className="flex items-center gap-2">

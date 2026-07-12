@@ -471,6 +471,47 @@ async function startServer() {
     }
   });
 
+  // 8. CSV EXPORT
+  app.get("/api/reports/export.csv", async (req, res) => {
+    try {
+      const vehicles = await db.getVehicles();
+      const trips = await db.getTrips();
+      const mLogs = await db.getMaintenanceLogs();
+      const fuelLogs = await db.getFuelLogs();
+      const expenses = await db.getExpenses();
+
+      let csv = "Vehicle ID,Name,Registration Number,Type,Total Distance (km),Total Fuel (L),Fuel Efficiency (km/L),Fuel Cost,Maintenance Cost,Other Expenses,Operational Cost,Total Revenue,ROI (%)\n";
+
+      vehicles.forEach(vehicle => {
+        const vehicleTrips = trips.filter(t => t.vehicleId === vehicle.id && t.status === TripStatus.COMPLETED);
+        const totalDistance = vehicleTrips.reduce((sum, t) => sum + (t.plannedDistanceKm ?? 0), 0);
+        const tripFuel = vehicleTrips.reduce((sum, t) => sum + (t.fuelConsumedL ?? 0), 0);
+        const manualFuel = fuelLogs.filter(f => f.vehicleId === vehicle.id).reduce((sum, f) => sum + f.liters, 0);
+        const totalFuel = tripFuel + manualFuel;
+        const kmPerL = totalFuel > 0 ? (totalDistance / totalFuel).toFixed(2) : "0.00";
+
+        const fuelCost = fuelLogs.filter(f => f.vehicleId === vehicle.id).reduce((sum, f) => sum + f.cost, 0);
+        const maintenanceCost = mLogs.filter(m => m.vehicleId === vehicle.id).reduce((sum, m) => sum + m.cost, 0);
+        const vehicleExpenses = expenses.filter(e => e.vehicleId === vehicle.id).reduce((sum, e) => sum + e.amount, 0);
+        const opCost = fuelCost + maintenanceCost + vehicleExpenses;
+
+        const totalRevenue = trips.filter(t => t.vehicleId === vehicle.id && t.status === TripStatus.COMPLETED)
+                                  .reduce((sum, t) => sum + (t.revenue ?? 0), 0);
+        const roiVal = vehicle.acquisitionCost > 0
+          ? (((totalRevenue - (fuelCost + maintenanceCost)) / vehicle.acquisitionCost) * 100).toFixed(2)
+          : "0.00";
+
+        csv += `"${vehicle.id}","${vehicle.name}","${vehicle.registrationNumber}","${vehicle.type}",${totalDistance},${totalFuel.toFixed(2)},${kmPerL},${fuelCost.toFixed(2)},${maintenanceCost.toFixed(2)},${vehicleExpenses.toFixed(2)},${opCost.toFixed(2)},${totalRevenue.toFixed(2)},${roiVal}\n`;
+      });
+
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", "attachment; filename=fleet_analytics_report.csv");
+      res.status(200).send(csv);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // --- INTEGRATION WITH VITE FRONTEND ---
 
   if (!isProd) {
