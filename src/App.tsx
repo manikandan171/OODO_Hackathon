@@ -17,7 +17,9 @@ import {
   User,
   Power,
   RefreshCw,
-  Search
+  Search,
+  LogOut,
+  MapPin
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -41,6 +43,7 @@ import MaintenanceView from "./components/MaintenanceView";
 import FuelExpensesView from "./components/FuelExpensesView";
 import ReportsView from "./components/ReportsView";
 import AccessDenied from "./components/AccessDenied";
+import TrackingMapView from "./components/TrackingMapView";
 
 export default function App() {
   const { user, token, logout, isLoading: authLoading } = useAuth();
@@ -318,6 +321,7 @@ export default function App() {
     { id: "vehicles", label: "Fleet", icon: Truck, roles: [Role.FLEET_MANAGER, Role.DISPATCHER] },
     { id: "drivers", label: "Drivers", icon: Users, roles: [Role.SAFETY_OFFICER, Role.FLEET_MANAGER, Role.DISPATCHER] },
     { id: "trips", label: "Trips", icon: Navigation, roles: [Role.DISPATCHER] },
+    { id: "live-tracking", label: "Live Tracking", icon: MapPin, roles: [Role.DISPATCHER, Role.FLEET_MANAGER] },
     { id: "maintenance", label: "Maintenance", icon: Wrench, roles: [Role.FLEET_MANAGER] },
     { id: "fuel-expenses", label: "Fuel & Expenses", icon: IndianRupee, roles: [Role.FINANCIAL_ANALYST, Role.FLEET_MANAGER] },
     { id: "reports", label: "Analytics", icon: BarChart3, roles: [Role.FINANCIAL_ANALYST] },
@@ -533,6 +537,14 @@ export default function App() {
                     analyticsReport={analyticsReport}
                     kpis={kpis}
                     activeRole={user.role}
+                  />
+                )}
+
+                {activeTab === "live-tracking" && (
+                  <TrackingMapView
+                    vehicles={vehicles}
+                    drivers={drivers}
+                    trips={trips}
                   />
                 )}
               </motion.div>
