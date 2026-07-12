@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { AlertCircle, ChevronDown } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { motion } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 
 export default function LoginView() {
@@ -49,7 +50,12 @@ export default function LoginView() {
   return (
     <div className="min-h-screen flex font-sans">
       {/* Left Pane - Light Theme */}
-      <div className="hidden lg:flex lg:w-1/2 bg-[#cbd5e1] p-12 flex-col justify-between relative">
+      <motion.div 
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="hidden lg:flex lg:w-1/2 bg-[#cbd5e1] p-12 flex-col justify-between relative"
+      >
         <div>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 bg-amber-600 rounded grid grid-cols-4 grid-rows-4 gap-0.5 p-1 shadow-sm">
@@ -88,13 +94,18 @@ export default function LoginView() {
         <div className="text-xs text-slate-400 uppercase tracking-widest font-medium ml-2">
           TRANSITOPS © 2026 - RBAC ENABLED
         </div>
-      </div>
+      </motion.div>
 
       {/* Right Pane - Dark Theme */}
-      <div className="w-full lg:w-1/2 bg-[#111111] text-slate-200 flex flex-col justify-center p-8 sm:p-12 lg:p-24 relative">
+      <motion.div 
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+        className="w-full lg:w-1/2 bg-[#111111] text-slate-200 flex flex-col justify-center p-8 sm:p-12 lg:p-24 relative"
+      >
         <div className="max-w-md w-full mx-auto">
           <div className="mb-10">
-            <h2 className="text-3xl font-medium text-white mb-2" style={{ fontFamily: "cursive, sans-serif" }}>Sign in to your account</h2>
+            <h2 className="text-3xl font-medium text-slate-200 mb-2" style={{ fontFamily: "cursive, sans-serif" }}>Sign in to your account</h2>
             <p className="text-slate-400 text-sm">Enter your credentials to continue</p>
           </div>
 
@@ -134,7 +145,7 @@ export default function LoginView() {
 
 
             {error && (
-              <div className="text-red-400 text-sm flex flex-col gap-1 border border-red-500/30 border-dashed rounded-xl p-4 bg-[#1a0f14] relative right-0 lg:-right-32 w-full lg:w-[calc(100%+8rem)] lg:absolute lg:top-1/2 lg:-translate-y-1/2 mt-4 lg:mt-0 shadow-xl">
+              <div className="text-red-400 text-sm flex flex-col gap-1 border border-red-500/30 border-dashed rounded-xl p-4 bg-[#1a0f14] relative right-0 lg:-right-32 w-full lg:w-[calc(100%+8rem)] lg:absolute lg:top-1/2 lg:-translate-y-1/2 mt-4 lg:mt-0 shadow-2xl shadow-black/50">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <p className="font-semibold text-xs uppercase tracking-wider mb-1">Error state</p>
@@ -156,8 +167,8 @@ export default function LoginView() {
             <button
               type="submit"
               disabled={loading || isLocked}
-              className={`w-full py-3 rounded-lg font-medium text-white transition mt-4 ${
-                loading || isLocked ? "bg-amber-700/50 cursor-not-allowed text-white/50" : "bg-amber-600 hover:bg-amber-500"
+              className={`w-full py-3 rounded-lg font-medium text-slate-200 transition mt-4 ${
+                loading || isLocked ? "bg-amber-700/50 cursor-not-allowed text-slate-200/50" : "bg-amber-600 hover:bg-amber-500"
               }`}
             >
               {loading ? "Authenticating..." : "Sign In"}
@@ -174,7 +185,7 @@ export default function LoginView() {
             </ul>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

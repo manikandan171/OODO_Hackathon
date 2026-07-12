@@ -143,7 +143,7 @@ export default function DriversView({
       );
     } else {
       return (
-        <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-sm bg-slate-100 text-slate-600 border border-slate-200 font-mono">
+        <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-sm bg-[#1a1a1a] text-slate-600 border border-slate-700 font-mono">
           Expires: {expiryStr}
         </span>
       );
@@ -191,7 +191,7 @@ export default function DriversView({
         {canEdit && (
           <button
             onClick={handleOpenAdd}
-            className="bg-[#f97316] hover:bg-[#ea580c] text-white px-5 py-2 rounded-lg font-bold shadow-md transition"
+            className="bg-[#f97316] hover:bg-[#ea580c] text-slate-200 px-5 py-2 rounded-lg font-bold shadow-md transition"
           >
             + Add Driver
           </button>
@@ -216,13 +216,13 @@ export default function DriversView({
           <tbody className="divide-y divide-gray-800">
             {filteredDrivers.map(d => (
               <tr key={d.id} className="hover:bg-[#222222] transition-colors cursor-pointer" onClick={() => canEdit && handleOpenEdit(d)}>
-                <td className="py-4 px-2 text-white">{d.name}</td>
+                <td className="py-4 px-2 text-slate-200">{d.name}</td>
                 <td className="py-4 px-2">{d.licenseNumber}</td>
                 <td className="py-4 px-2">{d.licenseCategory}</td>
                 <td className="py-4 px-2">
                   <div className="flex items-center gap-2">
                     {d.licenseExpiryDate}
-                    {new Date(d.licenseExpiryDate) < new Date() && <span className="text-xs uppercase text-white font-bold">EXPIRE</span>}
+                    {new Date(d.licenseExpiryDate) < new Date() && <span className="text-xs uppercase text-slate-200 font-bold">EXPIRE</span>}
                   </div>
                 </td>
                 <td className="py-4 px-2">{d.contactNumber}</td>
@@ -251,7 +251,7 @@ export default function DriversView({
           <button onClick={() => setFilterStatus("OFF_DUTY")} className={`px-4 py-1.5 rounded-lg text-black font-semibold text-sm transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${filterStatus === 'OFF_DUTY' || filterStatus === 'ALL' ? 'bg-[#6b7280]' : 'bg-[#6b7280] opacity-50'}`}>Off Duty</button>
           <button onClick={() => setFilterStatus("SUSPENDED")} className={`px-4 py-1.5 rounded-lg text-black font-semibold text-sm transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${filterStatus === 'SUSPENDED' || filterStatus === 'ALL' ? 'bg-[#f97316]' : 'bg-[#f97316] opacity-50'}`}>Suspended</button>
           {filterStatus !== "ALL" && (
-            <button onClick={() => setFilterStatus("ALL")} className="px-4 py-1.5 rounded-lg text-gray-400 font-semibold border border-gray-700 hover:text-white text-sm">Clear</button>
+            <button onClick={() => setFilterStatus("ALL")} className="px-4 py-1.5 rounded-lg text-gray-400 font-semibold border border-gray-700 hover:text-slate-200 text-sm">Clear</button>
           )}
         </div>
         <div className="text-[#f97316] text-sm mt-4 font-mono">
@@ -292,7 +292,7 @@ export default function DriversView({
                   placeholder="e.g. Alex Kamal"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] transition"
+                  className="w-full bg-[#1a1a1a] text-slate-200 border-slate-700 focus:border-blue-500 text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] transition"
                 />
               </div>
 
@@ -307,7 +307,7 @@ export default function DriversView({
                     disabled={modalMode === "EDIT"}
                     value={licenseNo}
                     onChange={(e) => setLicenseNo(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] disabled:opacity-50 transition"
+                    className="w-full bg-[#1a1a1a] text-slate-200 border-slate-700 focus:border-blue-500 text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] disabled:opacity-50 transition"
                   />
                 </div>
                 <div>
@@ -316,7 +316,7 @@ export default function DriversView({
                     id="modal-driver-cat"
                     value={licenseCat}
                     onChange={(e) => setLicenseCat(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] transition"
+                    className="w-full bg-[#1a1a1a] text-slate-200 border-slate-700 focus:border-blue-500 text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] transition"
                   >
                     <option value="LMV">LMV (Light Motor Vehicle)</option>
                     <option value="HMV">HMV (Heavy Motor Vehicle)</option>
@@ -334,7 +334,7 @@ export default function DriversView({
                     required
                     value={licenseExpiry}
                     onChange={(e) => setLicenseExpiry(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] transition"
+                    className="w-full bg-[#1a1a1a] text-slate-200 border-slate-700 focus:border-blue-500 text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] transition"
                   />
                 </div>
                 <div>
@@ -346,7 +346,7 @@ export default function DriversView({
                     placeholder="e.g. +1-555-0100"
                     value={contact}
                     onChange={(e) => setContact(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] transition"
+                    className="w-full bg-[#1a1a1a] text-slate-200 border-slate-700 focus:border-blue-500 text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] transition"
                   />
                 </div>
               </div>
@@ -362,7 +362,7 @@ export default function DriversView({
                   placeholder="e.g. 95"
                   value={safetyScore}
                   onChange={(e) => setSafetyScore(e.target.value)}
-                  className="w-full text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] transition"
+                  className="w-full bg-[#1a1a1a] text-slate-200 border-slate-700 focus:border-blue-500 text-sm px-3 py-2 rounded-lg bg-[#2a2a2a] border border-gray-700 text-gray-200 focus:outline-none focus:border-[#f97316] transition"
                 />
               </div>
 
@@ -377,7 +377,7 @@ export default function DriversView({
                 <button
                   id="modal-driver-submit"
                   type="submit"
-                  className="px-5 py-2 bg-[#f97316] hover:bg-[#ea580c] text-white text-sm font-semibold rounded-xl transition shadow-md cursor-pointer"
+                  className="px-5 py-2 bg-[#f97316] hover:bg-[#ea580c] text-slate-200 text-sm font-semibold rounded-xl transition shadow-md cursor-pointer"
                 >
                   {modalMode === "ADD" ? "Register Operator" : "Apply Credentials"}
                 </button>

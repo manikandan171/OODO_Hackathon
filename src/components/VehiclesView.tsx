@@ -212,7 +212,7 @@ export default function VehiclesView({
           <button
             id="enroll-vehicle-btn"
             onClick={handleOpenAdd}
-            className="inline-flex items-center gap-1.5 bg-[#d97706] hover:bg-[#b45309] text-white text-sm font-semibold px-5 py-2 rounded-lg transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 bg-[#d97706] hover:bg-[#b45309] text-slate-200 text-sm font-semibold px-5 py-2 rounded-lg transition cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Add Vehicle
           </button>
@@ -236,7 +236,7 @@ export default function VehiclesView({
           </thead>
           <tbody className="text-sm text-slate-300">
             {filteredVehicles.map((v) => (
-              <tr key={v.id} className="border-b border-slate-800/30 hover:bg-white/5 transition">
+              <tr key={v.id} className="border-b border-slate-800/30 hover:bg-[#1a1a1a]/5 transition">
                 <td className="px-4 py-4 whitespace-nowrap">{v.registrationNumber}</td>
                 <td className="px-4 py-4 whitespace-nowrap uppercase text-slate-400 font-medium">{v.name}</td>
                 <td className="px-4 py-4 whitespace-nowrap">{v.type}</td>
@@ -260,7 +260,7 @@ export default function VehiclesView({
                           title="Retire vehicle"
                           disabled={v.status === VehicleStatus.ON_TRIP}
                           className={`p-1 transition ${v.status === VehicleStatus.ON_TRIP
-                              ? "text-slate-700 cursor-not-allowed"
+                              ? "text-slate-400 cursor-not-allowed"
                               : "text-slate-500 hover:text-rose-400"
                             }`}
                         >
@@ -291,9 +291,9 @@ export default function VehiclesView({
       {/* Enroll/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-100 shadow-xl overflow-hidden animate-in fade-in zoom-in duration-150">
-            <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h2 className="text-lg font-bold text-slate-900">
+          <div className="bg-[#1a1a1a] rounded-2xl max-w-lg w-full border border-slate-800 shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in duration-150">
+            <div className="px-6 py-5 border-b border-slate-800 flex justify-between items-center bg-[#111]">
+              <h2 className="text-lg font-bold text-slate-200">
                 {modalMode === "ADD" ? "Enroll Fleet Asset" : "Update Fleet Asset Specs"}
               </h2>
               <button
@@ -323,7 +323,7 @@ export default function VehiclesView({
                     disabled={modalMode === "EDIT"}
                     value={regNo}
                     onChange={(e) => setRegNo(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 disabled:bg-slate-100 transition"
+                    className="w-full bg-[#1a1a1a] text-slate-200 border-slate-700 focus:border-blue-500 text-sm px-3 py-2 rounded-lg border border-slate-700 focus:outline-hidden focus:border-blue-500 disabled:bg-[#1a1a1a] transition"
                   />
                 </div>
                 <div>
@@ -332,7 +332,7 @@ export default function VehiclesView({
                     id="modal-vehicle-type"
                     value={type}
                     onChange={(e) => setType(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full bg-[#1a1a1a] text-slate-200 border-slate-700 focus:border-blue-500 text-sm px-3 py-2 rounded-lg border border-slate-700 focus:outline-hidden focus:border-blue-500 transition"
                   >
                     <option value="Van">Van</option>
                     <option value="Truck">Truck</option>
@@ -352,7 +352,7 @@ export default function VehiclesView({
                   placeholder="e.g. Ford Transit Custom (Van-05)"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                  className="w-full bg-[#1a1a1a] text-slate-200 border-slate-700 focus:border-blue-500 text-sm px-3 py-2 rounded-lg border border-slate-700 focus:outline-hidden focus:border-blue-500 transition"
                 />
               </div>
 
@@ -367,7 +367,7 @@ export default function VehiclesView({
                     placeholder="e.g. 500"
                     value={capacity}
                     onChange={(e) => setCapacity(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full bg-[#1a1a1a] text-slate-200 border-slate-700 focus:border-blue-500 text-sm px-3 py-2 rounded-lg border border-slate-700 focus:outline-hidden focus:border-blue-500 transition"
                   />
                 </div>
                 <div>
@@ -380,7 +380,7 @@ export default function VehiclesView({
                     placeholder="e.g. 12000"
                     value={odometer}
                     onChange={(e) => setOdometer(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full bg-[#1a1a1a] text-slate-200 border-slate-700 focus:border-blue-500 text-sm px-3 py-2 rounded-lg border border-slate-700 focus:outline-hidden focus:border-blue-500 transition"
                   />
                 </div>
               </div>
@@ -396,7 +396,7 @@ export default function VehiclesView({
                     placeholder="e.g. 25000"
                     value={cost}
                     onChange={(e) => setCost(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full bg-[#1a1a1a] text-slate-200 border-slate-700 focus:border-blue-500 text-sm px-3 py-2 rounded-lg border border-slate-700 focus:outline-hidden focus:border-blue-500 transition"
                   />
                 </div>
                 <div>
@@ -405,7 +405,7 @@ export default function VehiclesView({
                     id="modal-vehicle-region"
                     value={region}
                     onChange={(e) => setRegion(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full bg-[#1a1a1a] text-slate-200 border-slate-700 focus:border-blue-500 text-sm px-3 py-2 rounded-lg border border-slate-700 focus:outline-hidden focus:border-blue-500 transition"
                   >
                     <option value="North">North</option>
                     <option value="South">South</option>
@@ -415,18 +415,18 @@ export default function VehiclesView({
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:bg-slate-50 transition cursor-pointer"
+                  className="px-4 py-2 border border-slate-700 text-slate-600 text-sm font-semibold rounded-xl hover:bg-[#111] transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   id="modal-vehicle-submit"
                   type="submit"
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition shadow-xs cursor-pointer"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-slate-200 text-sm font-semibold rounded-xl transition shadow-xs cursor-pointer"
                 >
                   {modalMode === "ADD" ? "Enroll Asset" : "Apply Specs"}
                 </button>
