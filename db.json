@@ -1,0 +1,213 @@
+{
+  "users": [
+    {
+      "id": "u-1",
+      "name": "Sarah Connor",
+      "email": "fleet.manager@transitops.dev",
+      "password": "$2b$10$LgrOhLDAzkvFAmzKRq62A.NlWTI23llFNp6gRyG4AOR.J9NlUEO/m",
+      "role": "FLEET_MANAGER"
+    },
+    {
+      "id": "u-2",
+      "name": "James Holden",
+      "email": "dispatcher@transitops.dev",
+      "password": "$2b$10$LgrOhLDAzkvFAmzKRq62A.NlWTI23llFNp6gRyG4AOR.J9NlUEO/m",
+      "role": "DISPATCHER"
+    },
+    {
+      "id": "u-3",
+      "name": "Naomi Nagata",
+      "email": "safety.officer@transitops.dev",
+      "password": "$2b$10$LgrOhLDAzkvFAmzKRq62A.NlWTI23llFNp6gRyG4AOR.J9NlUEO/m",
+      "role": "SAFETY_OFFICER"
+    },
+    {
+      "id": "u-4",
+      "name": "Chrisjen Avasarala",
+      "email": "finance.analyst@transitops.dev",
+      "password": "$2b$10$LgrOhLDAzkvFAmzKRq62A.NlWTI23llFNp6gRyG4AOR.J9NlUEO/m",
+      "role": "FINANCIAL_ANALYST"
+    }
+  ],
+  "vehicles": [
+    {
+      "id": "v-1",
+      "registrationNumber": "Van-05",
+      "name": "Ford Transit Custom (Van-05)",
+      "type": "Van",
+      "maxLoadCapacityKg": 500,
+      "odometerKm": 12000,
+      "acquisitionCost": 25000,
+      "region": "North",
+      "status": "AVAILABLE",
+      "createdAt": "2026-07-12T04:27:40.752Z",
+      "updatedAt": "2026-07-12T04:27:40.752Z"
+    },
+    {
+      "id": "v-2",
+      "registrationNumber": "Truck-01",
+      "name": "Volvo FH16 Heavy Duty (Truck-01)",
+      "type": "Truck",
+      "maxLoadCapacityKg": 5000,
+      "odometerKm": 45000,
+      "acquisitionCost": 85000,
+      "region": "South",
+      "status": "IN_SHOP",
+      "createdAt": "2026-07-12T04:27:40.752Z",
+      "updatedAt": "2026-07-12T04:27:40.752Z"
+    },
+    {
+      "id": "v-3",
+      "registrationNumber": "Car-02",
+      "name": "Toyota Prius (Car-02)",
+      "type": "Car",
+      "maxLoadCapacityKg": 400,
+      "odometerKm": 8000,
+      "acquisitionCost": 18000,
+      "region": "East",
+      "status": "RETIRED",
+      "createdAt": "2026-07-12T04:27:40.752Z",
+      "updatedAt": "2026-07-12T04:27:40.752Z"
+    },
+    {
+      "id": "v-4",
+      "registrationNumber": "Bus-04",
+      "name": "Mercedes Sprinter shuttle (Bus-04)",
+      "type": "Bus",
+      "maxLoadCapacityKg": 3000,
+      "odometerKm": 60000,
+      "acquisitionCost": 120000,
+      "region": "West",
+      "status": "AVAILABLE",
+      "createdAt": "2026-07-12T04:27:40.752Z",
+      "updatedAt": "2026-07-12T04:27:40.752Z"
+    },
+    {
+      "id": "v-5",
+      "registrationNumber": "Van-06",
+      "name": "Ram ProMaster Cargo (Van-06)",
+      "type": "Van",
+      "maxLoadCapacityKg": 800,
+      "odometerKm": 14000,
+      "acquisitionCost": 28000,
+      "region": "North",
+      "status": "ON_TRIP",
+      "createdAt": "2026-07-12T04:27:40.752Z",
+      "updatedAt": "2026-07-12T04:27:40.752Z"
+    }
+  ],
+  "drivers": [
+    {
+      "id": "d-1",
+      "name": "Alex Kamal",
+      "licenseNumber": "DL-1001",
+      "licenseCategory": "LMV",
+      "licenseExpiryDate": "2027-07-12",
+      "contactNumber": "+1-555-0100",
+      "safetyScore": 95,
+      "status": "AVAILABLE",
+      "createdAt": "2026-07-12T04:27:40.752Z",
+      "updatedAt": "2026-07-12T04:27:40.752Z"
+    },
+    {
+      "id": "d-2",
+      "name": "Sam Chola",
+      "licenseNumber": "DL-2002",
+      "licenseCategory": "HMV",
+      "licenseExpiryDate": "2027-01-12",
+      "contactNumber": "+1-555-0200",
+      "safetyScore": 88,
+      "status": "ON_TRIP",
+      "createdAt": "2026-07-12T04:27:40.752Z",
+      "updatedAt": "2026-07-12T04:27:40.752Z"
+    },
+    {
+      "id": "d-3",
+      "name": "Jordan Belfort",
+      "licenseNumber": "DL-3003",
+      "licenseCategory": "LMV",
+      "licenseExpiryDate": "2026-05-12",
+      "contactNumber": "+1-555-0300",
+      "safetyScore": 72,
+      "status": "AVAILABLE",
+      "createdAt": "2026-07-12T04:27:40.752Z",
+      "updatedAt": "2026-07-12T04:27:40.752Z"
+    },
+    {
+      "id": "d-4",
+      "name": "Casey Jones",
+      "licenseNumber": "DL-4040",
+      "licenseCategory": "HMV",
+      "licenseExpiryDate": "2027-04-12",
+      "contactNumber": "+1-555-0400",
+      "safetyScore": 64,
+      "status": "SUSPENDED",
+      "createdAt": "2026-07-12T04:27:40.752Z",
+      "updatedAt": "2026-07-12T04:27:40.752Z"
+    },
+    {
+      "id": "d-5",
+      "name": "Taylor Mason",
+      "licenseNumber": "DL-5050",
+      "licenseCategory": "LMV",
+      "licenseExpiryDate": "2028-07-12",
+      "contactNumber": "+1-555-0500",
+      "safetyScore": 90,
+      "status": "AVAILABLE",
+      "createdAt": "2026-07-12T04:27:40.752Z",
+      "updatedAt": "2026-07-12T04:27:40.752Z"
+    }
+  ],
+  "trips": [
+    {
+      "id": "t-1",
+      "source": "Logistics Hub Alpha",
+      "destination": "Downtown Retail Outlet",
+      "vehicleId": "v-5",
+      "driverId": "d-2",
+      "cargoWeightKg": 450,
+      "plannedDistanceKm": 42,
+      "startOdometerKm": 13958,
+      "endOdometerKm": null,
+      "fuelConsumedL": null,
+      "revenue": 1200,
+      "status": "DISPATCHED",
+      "createdAt": "2026-07-12T00:27:40.752Z",
+      "dispatchedAt": "2026-07-12T01:27:40.752Z",
+      "completedAt": null,
+      "cancelledAt": null
+    }
+  ],
+  "maintenanceLogs": [
+    {
+      "id": "m-1",
+      "vehicleId": "v-2",
+      "description": "Transmission system calibration & fluid replacement",
+      "cost": 450,
+      "status": "OPEN",
+      "openedAt": "2026-07-11T04:27:40.752Z",
+      "closedAt": null
+    }
+  ],
+  "fuelLogs": [
+    {
+      "id": "f-1",
+      "vehicleId": "v-1",
+      "tripId": null,
+      "liters": 45,
+      "cost": 95,
+      "date": "2026-07-10T04:27:40.752Z"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "e-1",
+      "vehicleId": "v-1",
+      "tripId": null,
+      "category": "MISC",
+      "amount": 25,
+      "date": "2026-07-10T04:27:40.752Z",
+      "description": "Windshield washer fluid and microfibers"
+    }
+  ]
+}
