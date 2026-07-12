@@ -42,7 +42,7 @@ export default function DriversView({
       setLicenseNo("");
       setLicenseCat("LMV");
       setLicenseExpiry("");
-      setContact("");
+      setContact("+91 ");
       setSafetyScore("100");
       setModalMode("ADD");
       setShowModal(true);
@@ -74,9 +74,9 @@ export default function DriversView({
   const [safetyScore, setSafetyScore] = useState("100");
 
   const filteredDrivers = drivers.filter(d => {
-    const matchesSearch = d.name.toLowerCase().includes(search.toLowerCase()) || 
-                          d.licenseNumber.toLowerCase().includes(search.toLowerCase()) ||
-                          d.id.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = d.name.toLowerCase().includes(search.toLowerCase()) ||
+      d.licenseNumber.toLowerCase().includes(search.toLowerCase()) ||
+      d.id.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = filterStatus === "ALL" || d.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
@@ -90,7 +90,7 @@ export default function DriversView({
     const nextYear = new Date();
     nextYear.setFullYear(nextYear.getFullYear() + 1);
     setLicenseExpiry(nextYear.toISOString().split("T")[0]);
-    setContact("+1-555-");
+    setContact("+91 ");
     setSafetyScore("100");
     setShowModal(true);
   };
@@ -315,9 +315,8 @@ export default function DriversView({
                       ) : (
                         <ShieldAlert className="w-4 h-4 text-rose-500" />
                       )}
-                      <span className={`font-mono font-bold ${
-                        d.safetyScore >= 85 ? "text-emerald-700" : d.safetyScore >= 70 ? "text-amber-700" : "text-rose-700"
-                      }`}>{d.safetyScore} / 100</span>
+                      <span className={`font-mono font-bold ${d.safetyScore >= 85 ? "text-emerald-700" : d.safetyScore >= 70 ? "text-amber-700" : "text-rose-700"
+                        }`}>{d.safetyScore} / 100</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right whitespace-nowrap">
@@ -328,11 +327,10 @@ export default function DriversView({
                           id={`suspend-driver-${d.id}`}
                           onClick={() => handleToggleSuspend(d)}
                           title={d.status === DriverStatus.SUSPENDED ? t("drv_action_unsuspend") : t("drv_action_suspend")}
-                          className={`p-1.5 rounded-lg border border-transparent transition smooth-hover cursor-pointer ${
-                            d.status === DriverStatus.SUSPENDED
-                              ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100"
-                              : "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
-                          }`}
+                          className={`p-1.5 rounded-lg border border-transparent transition smooth-hover cursor-pointer ${d.status === DriverStatus.SUSPENDED
+                            ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100"
+                            : "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
+                            }`}
                         >
                           {d.status === DriverStatus.SUSPENDED ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                         </button>
@@ -379,7 +377,7 @@ export default function DriversView({
               <h2 className="text-lg font-bold text-slate-900">
                 {modalMode === "ADD" ? t("drv_modal_add") : t("drv_modal_edit")}
               </h2>
-              <button 
+              <button
                 onClick={() => setShowModal(false)}
                 className="text-slate-400 hover:text-slate-600 text-lg font-bold p-1 rounded-lg hover:bg-slate-200 transition cursor-pointer"
               >
@@ -401,7 +399,7 @@ export default function DriversView({
                   id="modal-driver-name"
                   type="text"
                   required
-                  placeholder="e.g. Samuel Holden"
+                  placeholder="e.g. Manikandan Rajan"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition"
@@ -415,7 +413,7 @@ export default function DriversView({
                     id="modal-driver-license"
                     type="text"
                     required
-                    placeholder="e.g. DL-9090"
+                    placeholder="e.g. TN-07-2024-0012345"
                     disabled={modalMode === "EDIT"}
                     value={licenseNo}
                     onChange={(e) => setLicenseNo(e.target.value)}
@@ -455,7 +453,7 @@ export default function DriversView({
                     id="modal-driver-contact"
                     type="text"
                     required
-                    placeholder="+1-555-0199"
+                    placeholder="e.g. +91 98401 23456"
                     value={contact}
                     onChange={(e) => setContact(e.target.value)}
                     className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition"
@@ -502,7 +500,9 @@ export default function DriversView({
       {activeLicenseDriver && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
           <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-3xl max-w-md w-full border border-indigo-200 shadow-2xl overflow-hidden p-6 relative animate-in zoom-in duration-200">
-            
+            {/* Hologram metallic shimmer effect */}
+            <div className="absolute inset-0 pointer-events-none hologram-sheen mix-blend-overlay opacity-35"></div>
+
             {/* Header: Republic of India Logo & Text */}
             <div className="flex justify-between items-start border-b border-indigo-200 pb-3 mb-4">
               <div className="flex gap-2.5 items-center">
@@ -571,7 +571,7 @@ export default function DriversView({
             <div className="absolute bottom-6 left-6 w-8 h-8 rounded-full border border-indigo-300 bg-gradient-to-r from-orange-400/20 via-white/10 to-emerald-400/20 shadow-xs pointer-events-none flex items-center justify-center text-[5px] text-indigo-500 font-bold uppercase tracking-widest font-mono">IND</div>
 
             {/* Close Button overlay */}
-            <button 
+            <button
               onClick={() => setActiveLicenseDriver(null)}
               className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-sm font-bold bg-white/60 hover:bg-white w-6 h-6 rounded-full flex items-center justify-center transition border border-indigo-200/50 cursor-pointer"
             >

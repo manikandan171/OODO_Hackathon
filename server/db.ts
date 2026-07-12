@@ -185,8 +185,8 @@ class JSONDatabase {
       vehicles: [
         {
           id: "v-1",
-          registrationNumber: "Van-05",
-          name: "Ford Transit Custom (Van-05)",
+          registrationNumber: "TN-07-CS-1234",
+          name: "Ford Transit Custom (TN-07-CS-1234)",
           type: "Van",
           maxLoadCapacityKg: 500,
           odometerKm: 12000,
@@ -198,8 +198,8 @@ class JSONDatabase {
         },
         {
           id: "v-2",
-          registrationNumber: "Truck-01",
-          name: "Volvo FH16 Heavy Duty (Truck-01)",
+          registrationNumber: "KA-51-MD-9876",
+          name: "Volvo FH16 Heavy Duty (KA-51-MD-9876)",
           type: "Truck",
           maxLoadCapacityKg: 5000,
           odometerKm: 45000,
@@ -211,8 +211,8 @@ class JSONDatabase {
         },
         {
           id: "v-3",
-          registrationNumber: "Car-02",
-          name: "Toyota Prius (Car-02)",
+          registrationNumber: "DL-1C-AA-1111",
+          name: "Toyota Prius (DL-1C-AA-1111)",
           type: "Car",
           maxLoadCapacityKg: 400,
           odometerKm: 8000,
@@ -224,8 +224,8 @@ class JSONDatabase {
         },
         {
           id: "v-4",
-          registrationNumber: "Bus-04",
-          name: "Mercedes Sprinter shuttle (Bus-04)",
+          registrationNumber: "MH-12-PQ-4567",
+          name: "Mercedes Sprinter shuttle (MH-12-PQ-4567)",
           type: "Bus",
           maxLoadCapacityKg: 3000,
           odometerKm: 60000,
@@ -237,8 +237,8 @@ class JSONDatabase {
         },
         {
           id: "v-5",
-          registrationNumber: "Van-06",
-          name: "Ram ProMaster Cargo (Van-06)",
+          registrationNumber: "HR-26-AB-9999",
+          name: "Ram ProMaster Cargo (HR-26-AB-9999)",
           type: "Van",
           maxLoadCapacityKg: 800,
           odometerKm: 14000,
@@ -252,7 +252,7 @@ class JSONDatabase {
       drivers: [
         {
           id: "d-1",
-          name: "Manikandan Rajan",
+          name: "Alex Kamal",
           licenseNumber: "DL-1001",
           licenseCategory: "LMV",
           licenseExpiryDate: oneYearFromToday.toISOString().split("T")[0],
@@ -264,7 +264,7 @@ class JSONDatabase {
         },
         {
           id: "d-2",
-          name: "Rajesh Kumar",
+          name: "Sam Chola",
           licenseNumber: "DL-2002",
           licenseCategory: "HMV",
           licenseExpiryDate: sixMonthsFromToday.toISOString().split("T")[0],
@@ -276,7 +276,7 @@ class JSONDatabase {
         },
         {
           id: "d-3",
-          name: "Karthik Srinivasan",
+          name: "Jordan Belfort",
           licenseNumber: "DL-3003",
           licenseCategory: "LMV",
           licenseExpiryDate: twoMonthsAgo.toISOString().split("T")[0], // Expired!
@@ -288,7 +288,7 @@ class JSONDatabase {
         },
         {
           id: "d-4",
-          name: "Ananya Iyer",
+          name: "Casey Jones",
           licenseNumber: "DL-4040",
           licenseCategory: "HMV",
           licenseExpiryDate: nineMonthsFromToday.toISOString().split("T")[0],
@@ -300,7 +300,7 @@ class JSONDatabase {
         },
         {
           id: "d-5",
-          name: "Arjun Mehta",
+          name: "Taylor Mason",
           licenseNumber: "DL-5050",
           licenseCategory: "LMV",
           licenseExpiryDate: twoYearsFromToday.toISOString().split("T")[0],
