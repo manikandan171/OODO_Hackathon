@@ -1,0 +1,6 @@
+{
+  "name": "TransitOps",
+  "description": "An end-to-end vehicle fleet operations platform with state-machine-driven tracking for vehicles, drivers, trips, and maintenance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
