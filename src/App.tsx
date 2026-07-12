@@ -664,9 +664,9 @@ export default function App() {
                   key={item.id}
                   id={`nav-${item.id}`}
                   onClick={() => navigateTo(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all smooth-hover cursor-pointer ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all smooth-hover cursor-pointer sidebar-btn ${
                     isSelected
-                      ? "bg-blue-600 text-white shadow-md scale-102 font-bold"
+                      ? "bg-blue-600 text-white shadow-md scale-102 font-bold sidebar-btn-active"
                       : "hover:bg-slate-800 hover:text-slate-200"
                   }`}
                 >

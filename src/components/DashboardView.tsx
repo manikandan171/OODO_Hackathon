@@ -173,10 +173,10 @@ export default function DashboardView({
         {cards.map((card, i) => {
           const Icon = card.icon;
           return (
-            <div key={i} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition custom-glow glass-panel smooth-hover">
+            <div key={i} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between glass-panel dashboard-card cursor-pointer">
               <div className="flex justify-between items-start">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{card.title}</span>
-                <div className={`p-2 rounded-xl border shrink-0 ${card.color}`}>
+                <div className={`p-2 rounded-xl border shrink-0 icon-box ${card.color}`}>
                   <Icon className="w-4 h-4" />
                 </div>
               </div>
