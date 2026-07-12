@@ -47,6 +47,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [initialOpenAddDriver, setInitialOpenAddDriver] = useState<boolean>(false);
+  const [initialOpenAddTrip, setInitialOpenAddTrip] = useState<boolean>(false);
 
   // Global search and navigation filter query state
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -66,6 +67,11 @@ export default function App() {
       setInitialOpenAddDriver(true);
     } else {
       setInitialOpenAddDriver(false);
+    }
+    if (tabId === "trips" && subpath === "new") {
+      setInitialOpenAddTrip(true);
+    } else {
+      setInitialOpenAddTrip(false);
     }
   };
 
@@ -89,6 +95,17 @@ export default function App() {
         setActiveTab("vehicles");
       } else if (path === "/trips") {
         setActiveTab("trips");
+        setGlobalSearchQuery("");
+        setInitialOpenAddTrip(false);
+      } else if (path === "/trips/new") {
+        setActiveTab("trips");
+        setGlobalSearchQuery("");
+        setInitialOpenAddTrip(true);
+      } else if (path.startsWith("/trips/")) {
+        const id = path.split("/").pop() || "";
+        setActiveTab("trips");
+        setGlobalSearchQuery(id);
+        setInitialOpenAddTrip(false);
       } else if (path === "/maintenance") {
         setActiveTab("maintenance");
       } else if (path === "/fuel-expenses") {
@@ -714,6 +731,7 @@ export default function App() {
                   onCompleteTrip={handleCompleteTrip}
                   onCancelTrip={handleCancelTrip}
                   globalSearchQuery={globalSearchQuery}
+                  initialOpenAdd={initialOpenAddTrip}
                 />
               )}
 

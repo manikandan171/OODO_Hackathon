@@ -16,6 +16,7 @@ interface TripsViewProps {
   onCompleteTrip: (id: string, completionData: any) => Promise<void>;
   onCancelTrip: (id: string) => Promise<void>;
   globalSearchQuery?: string;
+  initialOpenAdd?: boolean;
 }
 
 export default function TripsView({
@@ -27,11 +28,18 @@ export default function TripsView({
   onDispatchTrip,
   onCompleteTrip,
   onCancelTrip,
-  globalSearchQuery
+  globalSearchQuery,
+  initialOpenAdd
 }: TripsViewProps) {
   const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
+
+  useEffect(() => {
+    if (initialOpenAdd) {
+      handleOpenCreate();
+    }
+  }, [initialOpenAdd]);
 
   useEffect(() => {
     if (globalSearchQuery !== undefined) {
