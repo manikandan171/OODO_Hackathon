@@ -1,7 +1,8 @@
 import express from "express";
 import path from "path";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+import authRouter from "./server/lib/auth.js";
+import { requireRole } from "./server/lib/permissions.js";
 import { createServer as createViteServer } from "vite";
 import {
   db,
@@ -36,18 +37,7 @@ async function startServer() {
     }
   };
 
-  const requireRoles = (roles: Role[]) => {
-    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-      const user = (req as any).user;
-      if (!user || !roles.includes(user.role)) {
-        res.status(403).json({
-          error: `Access Denied: Your current role is '${user?.role}'. This action requires one of: ${roles.join(", ")}.`
-        });
-        return;
-      }
-      next();
-    };
-  };
+  // RBAC Helper moved to server/lib/permissions.ts
 
   // Health Check Endpoint (Public)
   app.get("/api/health", async (req, res) => {
@@ -69,40 +59,8 @@ async function startServer() {
 
   // --- API ROUTES ---
 
-  // Auth Endpoints
-  app.post("/api/auth/login", async (req, res) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      res.status(400).json({ error: "Email and password are required" });
-      return;
-    }
-    try {
-      const user = await db.getUserByEmail(email);
-      if (!user || !user.password) {
-        res.status(401).json({ error: "Invalid credentials" });
-        return;
-      }
-      const isMatch = bcrypt.compareSync(password, user.password);
-      if (!isMatch) {
-        res.status(401).json({ error: "Invalid credentials" });
-        return;
-      }
-      
-      const token = jwt.sign(
-        { id: user.id, email: user.email, role: user.role, name: user.name },
-        JWT_SECRET,
-        { expiresIn: "24h" }
-      );
-      
-      res.json({ token, user: { id: user.id, email: user.email, role: user.role, name: user.name } });
-    } catch (err: any) {
-      res.status(500).json({ error: "Database error" });
-    }
-  });
-
-  app.get("/api/auth/me", (req, res) => {
-    res.json({ user: (req as any).user });
-  });
+  // Auth Endpoints handled by authRouter
+  app.use("/api/auth", authRouter);
 
   // Users Session
   app.get("/api/users", async (req, res) => {
@@ -136,7 +94,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/vehicles", requireRoles([Role.FLEET_MANAGER]), async (req, res) => {
+  app.post("/api/vehicles", requireRole([Role.FLEET_MANAGER]), async (req, res) => {
     try {
       const { registrationNumber, name, type, maxLoadCapacityKg, odometerKm, acquisitionCost, region } = req.body;
       if (!registrationNumber || !name || !type || !maxLoadCapacityKg || !odometerKm || !acquisitionCost || !region) {
@@ -159,7 +117,7 @@ async function startServer() {
     }
   });
 
-  app.patch("/api/vehicles/:id", requireRoles([Role.FLEET_MANAGER]), async (req, res) => {
+  app.patch("/api/vehicles/:id", requireRole([Role.FLEET_MANAGER]), async (req, res) => {
     try {
       const updated = await db.updateVehicle(req.params.id, req.body);
       res.json(updated);
@@ -168,7 +126,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/vehicles/:id/retire", requireRoles([Role.FLEET_MANAGER]), async (req, res) => {
+  app.post("/api/vehicles/:id/retire", requireRole([Role.FLEET_MANAGER]), async (req, res) => {
     try {
       const retired = await db.retireVehicle(req.params.id);
       res.json(retired);
@@ -205,7 +163,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/drivers", requireRoles([Role.FLEET_MANAGER, Role.SAFETY_OFFICER]), async (req, res) => {
+  app.post("/api/drivers", requireRole([Role.FLEET_MANAGER, Role.SAFETY_OFFICER]), async (req, res) => {
     try {
       const { name, licenseNumber, licenseCategory, licenseExpiryDate, contactNumber, safetyScore } = req.body;
       if (!name || !licenseNumber || !licenseCategory || !licenseExpiryDate || !contactNumber) {
@@ -227,7 +185,7 @@ async function startServer() {
     }
   });
 
-  app.patch("/api/drivers/:id", requireRoles([Role.FLEET_MANAGER, Role.SAFETY_OFFICER]), async (req, res) => {
+  app.patch("/api/drivers/:id", requireRole([Role.FLEET_MANAGER, Role.SAFETY_OFFICER]), async (req, res) => {
     try {
       const updated = await db.updateDriver(req.params.id, req.body);
       res.json(updated);
@@ -236,7 +194,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/drivers/:id/suspend", requireRoles([Role.SAFETY_OFFICER]), async (req, res) => {
+  app.post("/api/drivers/:id/suspend", requireRole([Role.SAFETY_OFFICER]), async (req, res) => {
     try {
       const { suspend } = req.body;
       if (suspend === undefined) {
@@ -263,7 +221,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/trips", requireRoles([Role.DISPATCHER]), async (req, res) => {
+  app.post("/api/trips", requireRole([Role.DISPATCHER]), async (req, res) => {
     try {
       const { source, destination, vehicleId, driverId, cargoWeightKg, plannedDistanceKm, revenue } = req.body;
       if (!source || !destination || !vehicleId || !driverId || cargoWeightKg === undefined || plannedDistanceKm === undefined) {
@@ -285,7 +243,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/trips/:id/dispatch", requireRoles([Role.DISPATCHER]), async (req, res) => {
+  app.post("/api/trips/:id/dispatch", requireRole([Role.DISPATCHER]), async (req, res) => {
     try {
       const trip = await db.dispatchTrip(req.params.id);
       res.json(trip);
@@ -294,7 +252,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/trips/:id/complete", requireRoles([Role.DISPATCHER]), async (req, res) => {
+  app.post("/api/trips/:id/complete", requireRole([Role.DISPATCHER]), async (req, res) => {
     try {
       const { endOdometerKm, fuelConsumedL, fuelCost, revenue } = req.body;
       if (endOdometerKm === undefined || fuelConsumedL === undefined || fuelCost === undefined) {
@@ -314,7 +272,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/trips/:id/cancel", requireRoles([Role.DISPATCHER]), async (req, res) => {
+  app.post("/api/trips/:id/cancel", requireRole([Role.DISPATCHER]), async (req, res) => {
     try {
       const trip = await db.cancelTrip(req.params.id);
       res.json(trip);
@@ -338,7 +296,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/maintenance", requireRoles([Role.FLEET_MANAGER]), async (req, res) => {
+  app.post("/api/maintenance", requireRole([Role.FLEET_MANAGER]), async (req, res) => {
     try {
       const { vehicleId, description, cost } = req.body;
       if (!vehicleId || !description || cost === undefined) {
@@ -352,7 +310,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/maintenance/:id/close", requireRoles([Role.FLEET_MANAGER]), async (req, res) => {
+  app.post("/api/maintenance/:id/close", requireRole([Role.FLEET_MANAGER]), async (req, res) => {
     try {
       const { cost } = req.body;
       if (cost === undefined) {
@@ -376,7 +334,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/fuel-logs", requireRoles([Role.FLEET_MANAGER, Role.FINANCIAL_ANALYST, Role.DISPATCHER]), async (req, res) => {
+  app.post("/api/fuel-logs", requireRole([Role.FLEET_MANAGER, Role.FINANCIAL_ANALYST, Role.DISPATCHER]), async (req, res) => {
     try {
       const { vehicleId, liters, cost } = req.body;
       if (!vehicleId || liters === undefined || cost === undefined) {
@@ -400,7 +358,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/expenses", requireRoles([Role.FLEET_MANAGER, Role.FINANCIAL_ANALYST]), async (req, res) => {
+  app.post("/api/expenses", requireRole([Role.FLEET_MANAGER, Role.FINANCIAL_ANALYST]), async (req, res) => {
     try {
       const { vehicleId, tripId, category, amount, description } = req.body;
       if (!category || amount === undefined) {

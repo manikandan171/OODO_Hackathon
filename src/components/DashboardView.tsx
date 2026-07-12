@@ -1,18 +1,5 @@
-import React from "react";
-import { 
-  Truck, 
-  CheckCircle, 
-  Wrench, 
-  Navigation, 
-  FileText, 
-  AlertTriangle, 
-  Users, 
-  TrendingUp, 
-  Calendar,
-  UserCheck,
-  ShieldAlert
-} from "lucide-react";
-import { Role, DashboardKPIs, Vehicle, Driver, Trip } from "../types";
+import React, { useState } from "react";
+import { Role, DashboardKPIs, Vehicle, Driver, Trip, TripStatus, VehicleStatus } from "../types";
 
 interface DashboardViewProps {
   kpis: DashboardKPIs;
@@ -31,333 +18,196 @@ export default function DashboardView({
   activeRole,
   onNavigate
 }: DashboardViewProps) {
-  // Analyze alerts
-  const expiredDrivers = drivers.filter(d => new Date(d.licenseExpiryDate) < new Date());
-  const lowSafetyDrivers = drivers.filter(d => d.safetyScore < 75);
-  const suspendedDrivers = drivers.filter(d => d.status === "SUSPENDED");
-  const highOdoVehicles = vehicles.filter(v => v.odometerKm > 50000 && v.status !== "RETIRED");
-
-  // Format money
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(val);
-  };
+  const [filterType, setFilterType] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterRegion, setFilterRegion] = useState("All");
 
   const cards = [
-    {
-      title: "Fleet Utilization",
-      value: `${kpis.fleetUtilizationPercent}%`,
-      sub: "Active vehicles on route",
-      icon: TrendingUp,
-      color: "text-blue-600 bg-blue-50 border-blue-100"
-    },
-    {
-      title: "Active Vehicles",
-      value: kpis.activeVehicles,
-      sub: `Available: ${kpis.availableVehicles}`,
-      icon: Truck,
-      color: "text-emerald-600 bg-emerald-50 border-emerald-100"
-    },
-    {
-      title: "Vehicles in Shop",
-      value: kpis.vehiclesInShop,
-      sub: "Undergoing repairs",
-      icon: Wrench,
-      color: "text-amber-600 bg-amber-50 border-amber-100"
-    },
-    {
-      title: "Active Routes",
-      value: kpis.activeTrips,
-      sub: `Drafting: ${kpis.pendingTrips}`,
-      icon: Navigation,
-      color: "text-indigo-600 bg-indigo-50 border-indigo-100"
-    },
-    {
-      title: "On-Duty Operators",
-      value: kpis.driversOnDuty,
-      sub: "Active or ready",
-      icon: Users,
-      color: "text-violet-600 bg-violet-50 border-violet-100"
-    }
+    { title: "ACTIVE VEHICLES", value: kpis.activeVehicles, color: "border-blue-500" },
+    { title: "AVAILABLE VEHICLES", value: kpis.availableVehicles, color: "border-green-500" },
+    { title: "VEHICLES IN MAINTENANCE", value: kpis.vehiclesInShop, color: "border-orange-500" },
+    { title: "ACTIVE TRIPS", value: kpis.activeTrips, color: "border-blue-500" },
+    { title: "PENDING TRIPS", value: kpis.pendingTrips, color: "border-slate-500" },
+    { title: "DRIVERS ON DUTY", value: kpis.driversOnDuty, color: "border-slate-500" },
+    { title: "FLEET UTILIZATION", value: `${kpis.fleetUtilizationPercent}%`, color: "border-green-500" },
   ];
 
+  // Helper to format trip ID
+  const formatTripId = (id: string) => {
+    // Generate a short ID if it's a long UUID
+    if (id.length > 8) return `TR-${id.substring(0, 4).toUpperCase()}`;
+    return id.toUpperCase();
+  };
+
+  // Helper for Status Pill colors
+  const getTripStatusPill = (status: TripStatus) => {
+    switch (status) {
+      case TripStatus.DISPATCHED:
+        return <span className="inline-block px-4 py-1 rounded bg-[#60A5FA] text-black text-xs font-semibold w-24 text-center">On Trip</span>;
+      case TripStatus.COMPLETED:
+        return <span className="inline-block px-4 py-1 rounded bg-[#84CC16] text-black text-xs font-semibold w-24 text-center">Completed</span>;
+      case TripStatus.DRAFT:
+        return <span className="inline-block px-4 py-1 rounded bg-[#94A3B8] text-black text-xs font-semibold w-24 text-center">Draft</span>;
+      case TripStatus.CANCELLED:
+        return <span className="inline-block px-4 py-1 rounded bg-[#F87171] text-black text-xs font-semibold w-24 text-center">Cancelled</span>;
+      default:
+        return <span className="inline-block px-4 py-1 rounded bg-slate-500 text-black text-xs font-semibold w-24 text-center">{status}</span>;
+    }
+  };
+
+  // Recent trips for table (take last 5)
+  const recentTrips = [...trips].reverse().slice(0, 5);
+
+  // Vehicle Status Percentages for Bars
+  const totalVehicles = vehicles.length || 1; // prevent div by zero
+  const getPercent = (count: number) => `${Math.round((count / totalVehicles) * 100)}%`;
+
+  const availableCount = vehicles.filter(v => v.status === VehicleStatus.AVAILABLE).length;
+  const onTripCount = vehicles.filter(v => v.status === VehicleStatus.ON_TRIP).length;
+  const inShopCount = vehicles.filter(v => v.status === VehicleStatus.IN_SHOP).length;
+  const retiredCount = vehicles.filter(v => v.status === VehicleStatus.RETIRED).length;
+
   return (
-    <div className="space-y-6">
-      {/* Welcome Banner */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 custom-glow">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Operations Control</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Running with the role of <span className="font-semibold text-blue-600 underline decoration-2">{activeRole.replace("_", " ")}</span>. Here is your operational timeline.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 text-xs font-mono text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
-          <Calendar className="w-4 h-4 text-slate-400" />
-          <span>UTC: {new Date().toISOString().split("T")[0]}</span>
-        </div>
-      </div>
-
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {cards.map((card, i) => {
-          const Icon = card.icon;
-          return (
-            <div key={i} className="bg-white rounded-xl border border-slate-100 p-5 flex flex-col justify-between transition-all hover:border-slate-200 hover:-translate-y-0.5 shadow-xs">
-              <div className="flex justify-between items-start">
-                <span className="text-xs font-medium text-slate-500 tracking-wider uppercase">{card.title}</span>
-                <div className={`p-2 rounded-lg border ${card.color}`}>
-                  <Icon className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="mt-4">
-                <span className="text-3xl font-bold tracking-tight text-slate-900">{card.value}</span>
-                <p className="text-xs text-slate-400 mt-1 font-medium">{card.sub}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Main Content Layout Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Quick Actions Panel */}
-        <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-xs">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Quick Workflows</h2>
-          <div className="space-y-2.5">
-            {activeRole === Role.FLEET_MANAGER && (
-              <>
-                <button
-                  id="qa-new-vehicle"
-                  onClick={() => onNavigate("vehicles")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-blue-100 hover:bg-blue-50/40 text-left text-sm font-medium text-slate-700 hover:text-blue-700 transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <Truck className="w-4 h-4 text-blue-500" /> Enroll New Fleet Asset
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">→</span>
-                </button>
-                <button
-                  id="qa-new-maint"
-                  onClick={() => onNavigate("maintenance")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-amber-100 hover:bg-amber-50/40 text-left text-sm font-medium text-slate-700 hover:text-amber-700 transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <Wrench className="w-4 h-4 text-amber-500" /> Dispatch Asset to Maintenance
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">→</span>
-                </button>
-              </>
-            )}
-
-            {activeRole === Role.DISPATCHER && (
-              <>
-                <button
-                  id="qa-new-trip"
-                  onClick={() => onNavigate("trips")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-indigo-100 bg-indigo-50/40 hover:bg-indigo-50 text-left text-sm font-medium text-indigo-800 transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <Navigation className="w-4 h-4 text-indigo-600" /> Draft New Route Assignment
-                  </span>
-                  <span className="text-xs text-indigo-400 font-mono">→</span>
-                </button>
-                <button
-                  id="qa-view-active-trips"
-                  onClick={() => onNavigate("trips")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-left text-sm font-medium text-slate-700 transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-slate-500" /> Manage Active Dispatch Pool
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">→</span>
-                </button>
-              </>
-            )}
-
-            {activeRole === Role.SAFETY_OFFICER && (
-              <>
-                <button
-                  id="qa-audit-drivers"
-                  onClick={() => onNavigate("drivers")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-violet-100 hover:bg-violet-50/40 text-left text-sm font-medium text-slate-700 hover:text-violet-700 transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-violet-500" /> Audit Driver Safety Scores
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">→</span>
-                </button>
-                <button
-                  id="qa-manage-credentials"
-                  onClick={() => onNavigate("drivers")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-rose-100 hover:bg-rose-50/40 text-left text-sm font-medium text-slate-700 hover:text-rose-700 transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <ShieldAlert className="w-4 h-4 text-rose-500" /> Review License Expirations
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">→</span>
-                </button>
-              </>
-            )}
-
-            {activeRole === Role.FINANCIAL_ANALYST && (
-              <>
-                <button
-                  id="qa-view-reports"
-                  onClick={() => onNavigate("reports")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-violet-100 bg-violet-50/40 hover:bg-violet-50 text-left text-sm font-medium text-violet-800 transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-violet-600" /> Generate Operational Cost Reports
-                  </span>
-                  <span className="text-xs text-violet-400 font-mono">→</span>
-                </button>
-                <button
-                  id="qa-new-expense"
-                  onClick={() => onNavigate("fuel-expenses")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-emerald-100 hover:bg-emerald-50/40 text-left text-sm font-medium text-slate-700 hover:text-emerald-700 transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-emerald-500" /> Log Ancillary Fee or Toll
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">→</span>
-                </button>
-              </>
-            )}
-
-            {/* General Actions available for all */}
-            <button
-              id="qa-view-all-trips"
-              onClick={() => onNavigate("trips")}
-              className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-left text-sm font-medium text-slate-700 transition"
+    <div className="space-y-8 bg-[#111111] min-h-[calc(100vh-100px)]">
+      
+      {/* Filters Row */}
+      <div className="space-y-3">
+        <h3 className="text-xs font-medium text-slate-500 uppercase tracking-widest">Filters</h3>
+        <div className="flex flex-wrap gap-4">
+          <div className="relative">
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="appearance-none bg-[#1A1A1A] text-slate-300 text-xs px-4 py-2 pr-8 rounded border border-slate-700 focus:outline-none w-48 cursor-pointer"
             >
-              <span className="flex items-center gap-2">
-                <Navigation className="w-4 h-4 text-slate-400" /> General Route Catalog
-              </span>
-              <span className="text-xs text-slate-400 font-mono">→</span>
-            </button>
+              <option value="All">Vehicle Type: All</option>
+              <option value="Van">Vehicle Type: Van</option>
+              <option value="Truck">Vehicle Type: Truck</option>
+            </select>
+            <span className="absolute right-3 top-2.5 text-slate-500 text-[10px]">▼</span>
           </div>
+          <div className="relative">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="appearance-none bg-[#1A1A1A] text-slate-300 text-xs px-4 py-2 pr-8 rounded border border-slate-700 focus:outline-none w-48 cursor-pointer"
+            >
+              <option value="All">Status: All</option>
+              <option value="Available">Status: Available</option>
+              <option value="On Trip">Status: On Trip</option>
+            </select>
+            <span className="absolute right-3 top-2.5 text-slate-500 text-[10px]">▼</span>
+          </div>
+          <div className="relative">
+            <select
+              value={filterRegion}
+              onChange={(e) => setFilterRegion(e.target.value)}
+              className="appearance-none bg-[#1A1A1A] text-slate-300 text-xs px-4 py-2 pr-8 rounded border border-slate-700 focus:outline-none w-48 cursor-pointer"
+            >
+              <option value="All">Region: All</option>
+              <option value="North">Region: North</option>
+              <option value="South">Region: South</option>
+            </select>
+            <span className="absolute right-3 top-2.5 text-slate-500 text-[10px]">▼</span>
+          </div>
+        </div>
+      </div>
 
-          <div className="mt-6 border-t border-slate-100 pt-4">
-            <h3 className="text-xs font-semibold text-slate-400 tracking-wider uppercase mb-2">My Permissions</h3>
-            <div className="flex flex-wrap gap-1.5">
-              {activeRole === Role.FLEET_MANAGER && (
-                <>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">Vehicle CRUD</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">Maintenance Write</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">Driver Write</span>
-                </>
-              )}
-              {activeRole === Role.DISPATCHER && (
-                <>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">Trip Dispatch</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">Odometer Completion</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">Read Registry</span>
-                </>
-              )}
-              {activeRole === Role.SAFETY_OFFICER && (
-                <>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100">Suspend Operators</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100">Edit Safety Rating</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100">License Audits</span>
-                </>
-              )}
-              {activeRole === Role.FINANCIAL_ANALYST && (
-                <>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">Cost & Fuel Audits</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">ROI Reporting</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">Expense Logs</span>
-                </>
-              )}
-            </div>
+      {/* KPI Cards */}
+      <div className="flex flex-wrap gap-4">
+        {cards.map((card, idx) => (
+          <div key={idx} className={`bg-[#1A1A1A] border border-slate-800 border-l-4 rounded-sm p-4 w-40 h-28 flex flex-col justify-between ${card.color}`}>
+            <span className="text-[10px] text-slate-500 font-semibold tracking-wider uppercase leading-tight">{card.title}</span>
+            <span className="text-3xl font-light text-white">{card.value}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Lower Section Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 pt-4">
+        
+        {/* Left Col: Recent Trips Table */}
+        <div className="lg:col-span-2 space-y-4">
+          <h3 className="text-xs font-medium text-slate-500 uppercase tracking-widest border-b border-slate-800 pb-2">Recent Trips</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm whitespace-nowrap">
+              <thead>
+                <tr className="text-[10px] text-slate-500 uppercase tracking-widest border-b border-slate-800">
+                  <th className="pb-3 font-medium">Trip</th>
+                  <th className="pb-3 font-medium">Vehicle</th>
+                  <th className="pb-3 font-medium">Driver</th>
+                  <th className="pb-3 font-medium">Status</th>
+                  <th className="pb-3 font-medium">ETA</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentTrips.map((trip, idx) => {
+                  const v = vehicles.find(v => v.id === trip.vehicleId);
+                  const d = drivers.find(d => d.id === trip.driverId);
+                  let eta = "—";
+                  if (trip.status === TripStatus.DISPATCHED) eta = "45 min";
+                  else if (trip.status === TripStatus.DRAFT) eta = "Awaiting vehicle";
+
+                  return (
+                    <tr key={idx} className="border-b border-slate-800/50 hover:bg-slate-800/20 transition">
+                      <td className="py-4 text-slate-300 font-medium">{formatTripId(trip.id)}</td>
+                      <td className="py-4 text-slate-400">{v?.name || "—"}</td>
+                      <td className="py-4 text-slate-400">{d?.name || "—"}</td>
+                      <td className="py-4">{getTripStatusPill(trip.status)}</td>
+                      <td className="py-4 text-slate-400 text-xs">{eta}</td>
+                    </tr>
+                  );
+                })}
+                {recentTrips.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-slate-600 text-xs">No recent trips available</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Real-time Incident & Alerts Control Feed */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-slate-900">Compliance & Alerts Center</h2>
-              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-100">
-                {expiredDrivers.length + lowSafetyDrivers.length + suspendedDrivers.length + highOdoVehicles.length} Flagged Issues
-              </span>
+        {/* Right Col: Vehicle Status */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-medium text-slate-500 uppercase tracking-widest border-b border-slate-800 pb-2">Vehicle Status</h3>
+          <div className="space-y-6 pt-2">
+            
+            {/* Available */}
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-slate-300 w-20 shrink-0">Available</span>
+              <div className="flex-1 bg-[#222] h-3">
+                <div className="bg-[#22C55E] h-full" style={{ width: getPercent(availableCount) }}></div>
+              </div>
+            </div>
+            
+            {/* On Trip */}
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-slate-300 w-20 shrink-0">On Trip</span>
+              <div className="flex-1 bg-[#222] h-3">
+                <div className="bg-[#60A5FA] h-full" style={{ width: getPercent(onTripCount) }}></div>
+              </div>
+            </div>
+            
+            {/* In Shop */}
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-slate-300 w-20 shrink-0">In Shop</span>
+              <div className="flex-1 bg-[#222] h-3">
+                <div className="bg-[#F97316] h-full" style={{ width: getPercent(inShopCount) }}></div>
+              </div>
+            </div>
+            
+            {/* Retired */}
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-slate-300 w-20 shrink-0">Retired</span>
+              <div className="flex-1 bg-[#222] h-3">
+                <div className="bg-[#F472B6] h-full" style={{ width: getPercent(retiredCount) }}></div>
+              </div>
             </div>
 
-            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-              {expiredDrivers.map((d, idx) => (
-                <div key={`exp-${idx}`} className="flex gap-3 p-3 bg-rose-50/50 border border-rose-100 rounded-lg">
-                  <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-800">Critical: Expired Operator License</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Driver <span className="font-semibold text-slate-800">{d.name}</span> is using an expired license (Expired: {d.licenseExpiryDate}). They are hard-blocked from dispatch pool.
-                    </p>
-                    <button onClick={() => onNavigate("drivers")} className="text-xs font-semibold text-rose-700 hover:underline mt-1.5 inline-block">
-                      Update License Credentials →
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              {suspendedDrivers.map((d, idx) => (
-                <div key={`susp-${idx}`} className="flex gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
-                  <ShieldAlert className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-800">Alert: Operator Suspended</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Driver <span className="font-semibold text-slate-800">{d.name}</span> (License: {d.licenseNumber}) is currently suspended by Safety. Blocks active routing.
-                    </p>
-                    {activeRole === Role.SAFETY_OFFICER && (
-                      <button onClick={() => onNavigate("drivers")} className="text-xs font-semibold text-slate-600 hover:underline mt-1.5 inline-block">
-                        Reinstate Driver →
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {lowSafetyDrivers.map((d, idx) => (
-                <div key={`saf-${idx}`} className="flex gap-3 p-3 bg-amber-50/50 border border-amber-100 rounded-lg">
-                  <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-800">Warning: High-Risk Safety Score</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Driver <span className="font-semibold text-slate-800">{d.name}</span> has a safety rating of <span className="font-semibold text-amber-700">{d.safetyScore}/100</span>. Requires compliance counseling.
-                    </p>
-                  </div>
-                </div>
-              ))}
-
-              {highOdoVehicles.map((v, idx) => (
-                <div key={`odo-${idx}`} className="flex gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-lg">
-                  <Truck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-800">Advisory: Maintenance Checkup Odometer</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Fleet vehicle <span className="font-semibold text-slate-800">{v.name}</span> ({v.registrationNumber}) has crossed <span className="font-semibold text-slate-800">{v.odometerKm.toLocaleString()} km</span>. Advise inspection.
-                    </p>
-                    {activeRole === Role.FLEET_MANAGER && (
-                      <button onClick={() => onNavigate("maintenance")} className="text-xs font-semibold text-blue-700 hover:underline mt-1.5 inline-block">
-                        Dispatch to Shop Now →
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {expiredDrivers.length === 0 && lowSafetyDrivers.length === 0 && suspendedDrivers.length === 0 && highOdoVehicles.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                  <CheckCircle className="w-12 h-12 text-emerald-500 mb-2" />
-                  <p className="text-sm font-medium">All systems normal. 100% compliant.</p>
-                  <p className="text-xs text-slate-400 mt-1">Zero immediate compliance alerts flagged.</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-slate-100 bg-slate-50/50 -mx-5 -mb-5 p-5 rounded-b-xl flex justify-between items-center text-xs text-slate-500">
-            <span>Fleet database synced locally: <span className="font-mono text-slate-700 font-medium">db.json</span></span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>Live Monitoring</span>
           </div>
         </div>
+
       </div>
     </div>
   );

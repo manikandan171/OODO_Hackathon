@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Download, FileText, BarChart3, HelpCircle, DollarSign, Fuel, TrendingUp, Navigation, Scale } from "lucide-react";
+import { Download, FileText, BarChart3, HelpCircle, IndianRupee, Fuel, TrendingUp, Navigation, Scale } from "lucide-react";
 import { Role, VehicleReport } from "../types";
 
 interface ReportsViewProps {
@@ -31,7 +31,7 @@ export default function ReportsView({
       ]);
       filename = "transitops_fuel_efficiency.csv";
     } else if (reportType === "COST") {
-      headers = ["Vehicle ID", "Registration Number", "Model Name", "Acquisition Cost ($)", "Fuel Costs ($)", "Maintenance Costs ($)", "Other Expenses ($)", "Total Operational Cost ($)"];
+      headers = ["Vehicle ID", "Registration Number", "Model Name", "Acquisition Cost (₹)", "Fuel Costs (₹)", "Maintenance Costs (₹)", "Other Expenses (₹)", "Total Operational Cost (₹)"];
       rows = analyticsReport.map(r => [
         r.vehicleId,
         r.registrationNumber,
@@ -44,7 +44,7 @@ export default function ReportsView({
       ]);
       filename = "transitops_operational_costs.csv";
     } else {
-      headers = ["Vehicle ID", "Registration Number", "Model Name", "Acquisition Cost ($)", "Total Trips Revenue ($)", "Operational Expenses ($)", "Capital ROI (%)"];
+      headers = ["Vehicle ID", "Registration Number", "Model Name", "Acquisition Cost (₹)", "Total Trips Revenue (₹)", "Operational Expenses (₹)", "Capital ROI (%)"];
       rows = analyticsReport.map(r => [
         r.vehicleId,
         r.registrationNumber,
@@ -117,7 +117,7 @@ export default function ReportsView({
           }`}
         >
           <div className={`p-2.5 rounded-xl border shrink-0 ${reportType === "COST" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-slate-50 border-slate-200 text-slate-400"}`}>
-            <DollarSign className="w-5 h-5" />
+            <IndianRupee className="w-5 h-5" />
           </div>
           <div>
             <h3 className="font-bold text-sm">Fleet Operational Costs</h3>
@@ -165,7 +165,7 @@ export default function ReportsView({
             } else if (reportType === "COST") {
               const maxCost = Math.max(...analyticsReport.map(x => x.operationalCost), 1);
               ratio = (r.operationalCost / maxCost) * 100;
-              displayVal = `$${r.operationalCost.toLocaleString()}`;
+              displayVal = `₹${r.operationalCost.toLocaleString()}`;
               color = "bg-amber-500";
             } else {
               // ROI: scale -50% to 100%
@@ -215,7 +215,7 @@ export default function ReportsView({
                     </td>
                     <td className="px-6 py-4 font-mono whitespace-nowrap">{r.totalDistanceKm.toLocaleString()} km</td>
                     <td className="px-6 py-4 font-mono whitespace-nowrap">{r.totalFuelLiters.toLocaleString()} L</td>
-                    <td className="px-6 py-4 font-mono text-blue-600 whitespace-nowrap">${r.fuelCost.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-mono text-blue-600 whitespace-nowrap">₹{r.fuelCost.toLocaleString()}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold font-mono rounded-lg bg-blue-50 text-blue-700 border border-blue-100">
                         {r.fuelEfficiencyKmPerL} km/L
@@ -245,12 +245,12 @@ export default function ReportsView({
                       <span className="font-bold text-slate-900 block">{r.name}</span>
                       <span className="text-xs font-mono font-medium text-slate-400 block mt-0.5">{r.registrationNumber} • {r.type}</span>
                     </td>
-                    <td className="px-6 py-4 font-mono whitespace-nowrap text-amber-600">${r.fuelCost.toLocaleString()}</td>
-                    <td className="px-6 py-4 font-mono whitespace-nowrap text-amber-600">${r.maintenanceCost.toLocaleString()}</td>
-                    <td className="px-6 py-4 font-mono whitespace-nowrap text-slate-600">${r.otherExpenses.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-mono whitespace-nowrap text-amber-600">₹{r.fuelCost.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-mono whitespace-nowrap text-amber-600">₹{r.maintenanceCost.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-mono whitespace-nowrap text-slate-600">₹{r.otherExpenses.toLocaleString()}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold font-mono rounded-lg bg-amber-50 text-amber-700 border border-amber-100">
-                        ${r.operationalCost.toLocaleString()}
+                        ₹{r.operationalCost.toLocaleString()}
                       </span>
                     </td>
                   </tr>
@@ -277,9 +277,9 @@ export default function ReportsView({
                       <span className="font-bold text-slate-900 block">{r.name}</span>
                       <span className="text-xs font-mono font-medium text-slate-400 block mt-0.5">{r.registrationNumber} • {r.type}</span>
                     </td>
-                    <td className="px-6 py-4 font-mono whitespace-nowrap">${r.acquisitionCost.toLocaleString()}</td>
-                    <td className="px-6 py-4 font-mono text-emerald-600 whitespace-nowrap">${r.totalRevenue.toLocaleString()}</td>
-                    <td className="px-6 py-4 font-mono whitespace-nowrap text-rose-500">${(r.fuelCost + r.maintenanceCost).toLocaleString()}</td>
+                    <td className="px-6 py-4 font-mono whitespace-nowrap">₹{r.acquisitionCost.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-mono text-emerald-600 whitespace-nowrap">₹{r.totalRevenue.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-mono whitespace-nowrap text-rose-500">₹{(r.fuelCost + r.maintenanceCost).toLocaleString()}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold font-mono rounded-lg border ${
                         r.roiPercent >= 0 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   Plus, Search, Navigation, AlertTriangle, ShieldCheck, CheckCircle, 
-  XCircle, ArrowRight, Scale, Gauge, DollarSign, Calendar, Eye, Fuel 
+  XCircle, ArrowRight, Scale, Gauge, IndianRupee, Calendar, Eye, Fuel 
 } from "lucide-react";
 import { Role, Trip, TripStatus, Vehicle, Driver } from "../types";
 
@@ -365,8 +365,8 @@ export default function TripsView({
                 {t.status === TripStatus.COMPLETED && (
                   <div className="text-right w-full font-mono text-xs text-slate-500 space-y-1 bg-emerald-50/20 border border-emerald-100/50 p-3 rounded-xl">
                     <div className="font-bold text-emerald-800 font-sans text-sm flex items-center justify-end gap-1 mb-1">
-                      <DollarSign className="w-4 h-4 text-emerald-600 -mr-1" />
-                      {t.revenue?.toLocaleString()} <span className="text-xs font-normal text-slate-400">Revenue</span>
+                      <IndianRupee className="w-4 h-4 text-emerald-600 -mr-1" />
+                      ₹{t.revenue?.toLocaleString()} <span className="text-xs font-normal text-slate-400">Revenue</span>
                     </div>
                     <div>Fuel: <span className="font-bold text-slate-700">{t.fuelConsumedL}L</span> logged</div>
                     <div>Odo final: <span className="font-bold text-slate-700">{t.endOdometerKm} km</span></div>
@@ -567,7 +567,7 @@ export default function TripsView({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Est. Revenue ($)</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Est. Revenue (₹)</label>
                   <input
                     id="modal-trip-revenue"
                     type="number"
@@ -667,7 +667,7 @@ export default function TripsView({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Fuel Purchase Cost ($)</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Fuel Purchase Cost (₹)</label>
                   <input
                     id="modal-complete-fuelcost"
                     type="number"
@@ -680,7 +680,7 @@ export default function TripsView({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Final Transaction Revenue ($)</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Final Transaction Revenue (₹)</label>
                   <input
                     id="modal-complete-revenue"
                     type="number"

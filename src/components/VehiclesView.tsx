@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Search, Truck, Filter, MapPin, Scale, Gauge, DollarSign, Eye, ShieldAlert, Trash2, Edit } from "lucide-react";
+import { Plus, Search, Truck, Filter, MapPin, Scale, Gauge, IndianRupee, Eye, ShieldAlert, Trash2, Edit } from "lucide-react";
 import { Role, Vehicle, VehicleStatus } from "../types";
 
 interface VehiclesViewProps {
@@ -47,9 +47,9 @@ export default function VehiclesView({
 
   // Filtering vehicles
   const filteredVehicles = vehicles.filter(v => {
-    const matchesSearch = v.name.toLowerCase().includes(search.toLowerCase()) || 
-                          v.registrationNumber.toLowerCase().includes(search.toLowerCase()) ||
-                          v.id.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = v.name.toLowerCase().includes(search.toLowerCase()) ||
+      v.registrationNumber.toLowerCase().includes(search.toLowerCase()) ||
+      v.id.toLowerCase().includes(search.toLowerCase());
     const matchesType = filterType === "ALL" || v.type === filterType;
     const matchesStatus = filterStatus === "ALL" || v.status === filterStatus;
     const matchesRegion = filterRegion === "ALL" || v.region === filterRegion;
@@ -129,26 +129,26 @@ export default function VehiclesView({
     switch (status) {
       case VehicleStatus.AVAILABLE:
         return (
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Available
+          <span className="inline-flex justify-center w-24 text-xs font-semibold px-2 py-1.5 rounded-md bg-[#22c55e] text-black">
+            Available
           </span>
         );
       case VehicleStatus.ON_TRIP:
         return (
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> On Trip
+          <span className="inline-flex justify-center w-24 text-xs font-semibold px-2 py-1.5 rounded-md bg-[#3b82f6] text-black">
+            On Trip
           </span>
         );
       case VehicleStatus.IN_SHOP:
         return (
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> In Shop
+          <span className="inline-flex justify-center w-24 text-xs font-semibold px-2 py-1.5 rounded-md bg-[#f59e0b] text-black">
+            In Shop
           </span>
         );
       case VehicleStatus.RETIRED:
         return (
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Retired
+          <span className="inline-flex justify-center w-24 text-xs font-semibold px-2 py-1.5 rounded-md bg-[#fb7185] text-black">
+            Retired
           </span>
         );
       default:
@@ -156,192 +156,137 @@ export default function VehiclesView({
     }
   };
 
+
   return (
     <div className="space-y-6">
-      {/* Header and Controls */}
+      {/* Filters & Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Fleet Asset Registry</h1>
-          <p className="text-sm text-slate-500 mt-1">Enroll, audit, and transition status of vehicles across regions.</p>
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Type Filter */}
+          <div className="flex items-center">
+            <select
+              id="vehicle-filter-type"
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="text-sm py-1.5 px-3 rounded-lg bg-transparent border border-slate-800 text-slate-300 focus:outline-hidden focus:border-slate-500 transition"
+            >
+              <option value="ALL">Type: All</option>
+              <option value="Van">Van</option>
+              <option value="Truck">Truck</option>
+              <option value="Bus">Bus</option>
+              <option value="Car">Car</option>
+              <option value="Bike">Bike</option>
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          <div className="flex items-center">
+            <select
+              id="vehicle-filter-status"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="text-sm py-1.5 px-3 rounded-lg bg-transparent border border-slate-800 text-slate-300 focus:outline-hidden focus:border-slate-500 transition"
+            >
+              <option value="ALL">Status: All</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="ON_TRIP">On Trip</option>
+              <option value="IN_SHOP">In Shop</option>
+              <option value="RETIRED">Retired</option>
+            </select>
+          </div>
+
+          {/* Search */}
+          <div className="relative">
+            <input
+              id="vehicle-search"
+              type="text"
+              placeholder="Search reg. no..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-48 text-sm px-3 py-1.5 rounded-lg bg-transparent border border-slate-800 text-slate-300 placeholder-slate-600 focus:outline-hidden focus:border-slate-500 transition"
+            />
+          </div>
         </div>
+
         {activeRole === Role.FLEET_MANAGER && (
           <button
             id="enroll-vehicle-btn"
             onClick={handleOpenAdd}
-            className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 bg-[#d97706] hover:bg-[#b45309] text-white text-sm font-semibold px-5 py-2 rounded-lg transition cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Enroll New Vehicle
+            <Plus className="w-4 h-4" /> Add Vehicle
           </button>
         )}
       </div>
 
-      {/* Filters Card */}
-      <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-xs grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Search */}
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-          <input
-            id="vehicle-search"
-            type="text"
-            placeholder="Search name or plate..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full text-sm pl-9 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
-          />
-        </div>
-
-        {/* Type Filter */}
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-400 shrink-0" />
-          <select
-            id="vehicle-filter-type"
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="w-full text-sm py-2 px-3 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
-          >
-            <option value="ALL">All Asset Types</option>
-            <option value="Van">Vans</option>
-            <option value="Truck">Trucks</option>
-            <option value="Bus">Buses</option>
-            <option value="Car">Cars</option>
-            <option value="Bike">Bikes</option>
-          </select>
-        </div>
-
-        {/* Status Filter */}
-        <div className="flex items-center gap-2">
-          <Gauge className="w-4 h-4 text-slate-400 shrink-0" />
-          <select
-            id="vehicle-filter-status"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full text-sm py-2 px-3 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="AVAILABLE">Available Only</option>
-            <option value="ON_TRIP">Out on Trip</option>
-            <option value="IN_SHOP">Under Maintenance</option>
-            <option value="RETIRED">Retired Asset</option>
-          </select>
-        </div>
-
-        {/* Region Filter */}
-        <div className="flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-          <select
-            id="vehicle-filter-region"
-            value={filterRegion}
-            onChange={(e) => setFilterRegion(e.target.value)}
-            className="w-full text-sm py-2 px-3 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
-          >
-            <option value="ALL">All Regions</option>
-            <option value="North">North Hub</option>
-            <option value="South">South Hub</option>
-            <option value="East">East Hub</option>
-            <option value="West">West Hub</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Asset Table / Grid View */}
-      <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                <th className="px-6 py-4">Asset Details</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Odometer</th>
-                <th className="px-6 py-4">Capacity</th>
-                <th className="px-6 py-4">Region</th>
-                <th className="px-6 py-4">Valuation</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
-              {filteredVehicles.map((v) => (
-                <tr key={v.id} className="hover:bg-slate-50/50 transition">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-lg bg-slate-100 text-slate-600 border border-slate-200/50 shrink-0">
-                        <Truck className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <span className="font-bold text-slate-900 block">{v.name}</span>
-                        <span className="text-xs font-mono font-medium text-slate-400 block mt-0.5">{v.registrationNumber} • {v.type}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(v.status)}</td>
-                  <td className="px-6 py-4 font-mono font-semibold text-slate-700 whitespace-nowrap">
-                    {v.odometerKm.toLocaleString()} <span className="text-xs font-sans text-slate-400">km</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-1.5 text-slate-600 font-medium">
-                      <Scale className="w-4 h-4 text-slate-400" />
-                      <span>{v.maxLoadCapacityKg.toLocaleString()} kg</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-1 text-slate-600 font-medium">
-                      <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{v.region}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 font-mono font-semibold text-slate-700 whitespace-nowrap">
-                    <div className="flex items-center text-slate-600 font-medium">
-                      <DollarSign className="w-3.5 h-3.5 text-slate-400 -mr-0.5" />
-                      <span>{v.acquisitionCost.toLocaleString()}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right whitespace-nowrap">
-                    <div className="flex justify-end gap-1.5">
-                      {activeRole === Role.FLEET_MANAGER && v.status !== VehicleStatus.RETIRED && (
-                        <>
-                          <button
-                            id={`edit-vehicle-${v.id}`}
-                            onClick={() => handleOpenEdit(v)}
-                            title="Edit vehicle details"
-                            className="p-1.5 hover:bg-blue-50 text-slate-500 hover:text-blue-600 rounded-lg border border-transparent hover:border-blue-100 transition"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            id={`retire-vehicle-${v.id}`}
-                            onClick={() => handleRetire(v)}
-                            title="Permanently retire vehicle"
-                            disabled={v.status === VehicleStatus.ON_TRIP}
-                            className={`p-1.5 rounded-lg border border-transparent transition ${
-                              v.status === VehicleStatus.ON_TRIP 
-                                ? "text-slate-200 cursor-not-allowed" 
-                                : "hover:bg-rose-50 text-slate-500 hover:text-rose-600 hover:border-rose-100"
+      {/* Asset Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="text-[10px] text-slate-500 uppercase tracking-wider border-b border-slate-800/50">
+              <th className="px-4 py-3 font-medium">Reg. No. (Unique)</th>
+              <th className="px-4 py-3 font-medium">Name/Model</th>
+              <th className="px-4 py-3 font-medium">Type</th>
+              <th className="px-4 py-3 font-medium">Capacity</th>
+              <th className="px-4 py-3 font-medium">Odometer</th>
+              <th className="px-4 py-3 font-medium">Acq. Cost</th>
+              <th className="px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 font-medium text-right"></th>
+            </tr>
+          </thead>
+          <tbody className="text-sm text-slate-300">
+            {filteredVehicles.map((v) => (
+              <tr key={v.id} className="border-b border-slate-800/30 hover:bg-white/5 transition">
+                <td className="px-4 py-4 whitespace-nowrap">{v.registrationNumber}</td>
+                <td className="px-4 py-4 whitespace-nowrap uppercase text-slate-400 font-medium">{v.name}</td>
+                <td className="px-4 py-4 whitespace-nowrap">{v.type}</td>
+                <td className="px-4 py-4 whitespace-nowrap">{v.maxLoadCapacityKg.toLocaleString()} kg</td>
+                <td className="px-4 py-4 whitespace-nowrap">{v.odometerKm.toLocaleString()}</td>
+                <td className="px-4 py-4 whitespace-nowrap">{v.acquisitionCost.toLocaleString()}</td>
+                <td className="px-4 py-4 whitespace-nowrap">{getStatusBadge(v.status)}</td>
+                <td className="px-4 py-4 text-right whitespace-nowrap">
+                  <div className="flex justify-end gap-2 opacity-0 hover:opacity-100 focus-within:opacity-100">
+                    {activeRole === Role.FLEET_MANAGER && v.status !== VehicleStatus.RETIRED && (
+                      <>
+                        <button
+                          onClick={() => handleOpenEdit(v)}
+                          title="Edit vehicle"
+                          className="p-1 text-slate-500 hover:text-blue-400 transition"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleRetire(v)}
+                          title="Retire vehicle"
+                          disabled={v.status === VehicleStatus.ON_TRIP}
+                          className={`p-1 transition ${v.status === VehicleStatus.ON_TRIP
+                              ? "text-slate-700 cursor-not-allowed"
+                              : "text-slate-500 hover:text-rose-400"
                             }`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
-                      {activeRole !== Role.FLEET_MANAGER && (
-                        <span className="text-xs text-slate-400 font-medium font-mono px-2 py-1">READ ONLY</span>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
 
-              {filteredVehicles.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
-                    <Truck className="w-12 h-12 text-slate-200 mx-auto mb-2" />
-                    <p className="text-sm font-semibold">No assets found matching filters.</p>
-                    <p className="text-xs text-slate-400 mt-1">Check search string or ease filter requirements.</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+            {filteredVehicles.length === 0 && (
+              <tr>
+                <td colSpan={8} className="px-4 py-12 text-center text-slate-500">
+                  <p className="text-sm">No vehicles found.</p>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
+
+      <p className="text-[#d97706] text-xs font-mono">
+        Rule: Registration No. must be unique • Retired/In Shop vehicles are hidden from Trip Dispatcher
+      </p>
 
       {/* Enroll/Edit Modal */}
       {showModal && (
@@ -351,7 +296,7 @@ export default function VehiclesView({
               <h2 className="text-lg font-bold text-slate-900">
                 {modalMode === "ADD" ? "Enroll Fleet Asset" : "Update Fleet Asset Specs"}
               </h2>
-              <button 
+              <button
                 onClick={() => setShowModal(false)}
                 className="text-slate-400 hover:text-slate-600 text-lg font-bold p-1 rounded-lg hover:bg-slate-200 transition"
               >
@@ -442,7 +387,7 @@ export default function VehiclesView({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Acquisition Cost ($)</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Acquisition Cost (₹)</label>
                   <input
                     id="modal-vehicle-cost"
                     type="number"
