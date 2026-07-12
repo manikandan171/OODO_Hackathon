@@ -304,15 +304,19 @@ export default function App() {
 
   // --- RENDERING ROUTE NAVIGATION SIDEBAR ---
 
-  const navigationItems = [
+  const allNavigationItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "vehicles", label: "Vehicles Registry", icon: Truck },
-    { id: "drivers", label: "Operators Manifest", icon: Users },
-    { id: "trips", label: "Route Assignment", icon: Navigation },
-    { id: "maintenance", label: "Work Orders", icon: Wrench },
-    { id: "fuel-expenses", label: "Accounting Journals", icon: DollarSign },
-    { id: "reports", label: "Logistics Intelligence", icon: BarChart3 }
+    { id: "vehicles", label: "Vehicles Registry", icon: Truck, roles: [Role.FLEET_MANAGER, Role.DISPATCHER] },
+    { id: "drivers", label: "Operators Manifest", icon: Users, roles: [Role.SAFETY_OFFICER, Role.FLEET_MANAGER, Role.DISPATCHER] },
+    { id: "trips", label: "Route Assignment", icon: Navigation, roles: [Role.DISPATCHER] },
+    { id: "maintenance", label: "Work Orders", icon: Wrench, roles: [Role.FLEET_MANAGER] },
+    { id: "fuel-expenses", label: "Accounting Journals", icon: DollarSign, roles: [Role.FINANCIAL_ANALYST, Role.FLEET_MANAGER] },
+    { id: "reports", label: "Logistics Intelligence", icon: BarChart3, roles: [Role.FINANCIAL_ANALYST] }
   ];
+
+  const navigationItems = user 
+    ? allNavigationItems.filter(item => !item.roles || item.roles.includes(user.role))
+    : [];
 
   if (authLoading) {
     return (
@@ -585,7 +589,7 @@ export default function App() {
             </div>
           ) : (
             <div className="max-w-7xl mx-auto animate-in fade-in duration-300">
-              {activeTab === "dashboard" && (
+              {(activeTab === "dashboard" || !navigationItems.some(i => i.id === activeTab)) && (
                 <DashboardView
                   kpis={kpis}
                   vehicles={vehicles}

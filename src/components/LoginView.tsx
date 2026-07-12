@@ -131,24 +131,7 @@ export default function LoginView() {
               />
             </div>
 
-            <div>
-              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2" htmlFor="role">
-                Role (RBAC)
-              </label>
-              <div className="relative">
-                <select
-                  id="role"
-                  disabled={isLocked}
-                  className="w-full bg-[#1a1a1a] text-slate-300 px-4 py-3 rounded-lg border border-slate-700 focus:outline-none focus:border-amber-600 transition appearance-none text-sm cursor-pointer"
-                >
-                  <option>Dispatcher</option>
-                  <option>Fleet Manager</option>
-                  <option>Safety Officer</option>
-                  <option>Financial Analyst</option>
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-500 absolute right-4 top-3.5 pointer-events-none" />
-              </div>
-            </div>
+
 
             {error && (
               <div className="text-red-400 text-sm flex flex-col gap-1 border border-red-500/30 border-dashed rounded-xl p-4 bg-[#1a0f14] relative right-0 lg:-right-32 w-full lg:w-[calc(100%+8rem)] lg:absolute lg:top-1/2 lg:-translate-y-1/2 mt-4 lg:mt-0 shadow-xl">
