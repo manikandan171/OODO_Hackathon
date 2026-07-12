@@ -1,8 +1,7 @@
-import fs from "fs";
-import path from "path";
-import bcrypt from "bcryptjs";
+import mysql from "mysql2/promise";
+import dotenv from "dotenv";
 
-const DB_FILE = path.join(process.cwd(), "db.json");
+dotenv.config();
 
 export enum Role {
   FLEET_MANAGER = "FLEET_MANAGER",
@@ -120,661 +119,407 @@ export interface Expense {
   description: string | null;
 }
 
-export interface DatabaseSchema {
-  users: User[];
-  vehicles: Vehicle[];
-  drivers: Driver[];
-  trips: Trip[];
-  maintenanceLogs: MaintenanceLog[];
-  fuelLogs: FuelLog[];
-  expenses: Expense[];
-}
+// MySQL Database Connection Pool
+const pool = mysql.createPool({
+  host: process.env.MYSQL_HOST || "localhost",
+  port: parseInt(process.env.MYSQL_PORT || "3306"),
+  user: process.env.MYSQL_USER || "root",
+  password: process.env.MYSQL_PASSWORD || "",
+  database: process.env.MYSQL_DATABASE || "transitops",
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
 
-// Memory-backed database that synchronizes to a JSON file
-class JSONDatabase {
-  private data!: DatabaseSchema;
-
-  constructor() {
-    this.load();
-  }
-
-  private load() {
-    if (fs.existsSync(DB_FILE)) {
-      try {
-        const raw = fs.readFileSync(DB_FILE, "utf-8");
-        this.data = JSON.parse(raw);
-        // Clean loading verification
-        return;
-      } catch (err) {
-        console.error("Failed to parse db.json, generating a new seed database...", err);
-      }
-    }
-    this.seed();
-  }
-
-  private save() {
-    try {
-      fs.writeFileSync(DB_FILE, JSON.stringify(this.data, null, 2), "utf-8");
-    } catch (err) {
-      console.error("Database save failed!", err);
-    }
-  }
-
-  private seed() {
-    const oneYearFromToday = new Date();
-    oneYearFromToday.setFullYear(oneYearFromToday.getFullYear() + 1);
-
-    const sixMonthsFromToday = new Date();
-    sixMonthsFromToday.setMonth(sixMonthsFromToday.getMonth() + 6);
-
-    const nineMonthsFromToday = new Date();
-    nineMonthsFromToday.setMonth(nineMonthsFromToday.getMonth() + 9);
-
-    const twoYearsFromToday = new Date();
-    twoYearsFromToday.setFullYear(twoYearsFromToday.getFullYear() + 2);
-
-    const twoMonthsAgo = new Date();
-    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-
-    // Hash the default password "password123" for seed users
-    const defaultPasswordHash = bcrypt.hashSync("password123", 10);
-
-    this.data = {
-      users: [
-        { id: "u-1", name: "Sarah Connor", email: "fleet.manager@transitops.dev", password: defaultPasswordHash, role: Role.FLEET_MANAGER },
-        { id: "u-2", name: "James Holden", email: "dispatcher@transitops.dev", password: defaultPasswordHash, role: Role.DISPATCHER },
-        { id: "u-3", name: "Naomi Nagata", email: "safety.officer@transitops.dev", password: defaultPasswordHash, role: Role.SAFETY_OFFICER },
-        { id: "u-4", name: "Chrisjen Avasarala", email: "finance.analyst@transitops.dev", password: defaultPasswordHash, role: Role.FINANCIAL_ANALYST }
-      ],
-      vehicles: [
-        {
-          id: "v-1",
-          registrationNumber: "Van-05",
-          name: "Ford Transit Custom (Van-05)",
-          type: "Van",
-          maxLoadCapacityKg: 500,
-          odometerKm: 12000,
-          acquisitionCost: 25000,
-          region: "North",
-          status: VehicleStatus.AVAILABLE,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: "v-2",
-          registrationNumber: "Truck-01",
-          name: "Volvo FH16 Heavy Duty (Truck-01)",
-          type: "Truck",
-          maxLoadCapacityKg: 5000,
-          odometerKm: 45000,
-          acquisitionCost: 85000,
-          region: "South",
-          status: VehicleStatus.IN_SHOP,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: "v-3",
-          registrationNumber: "Car-02",
-          name: "Toyota Prius (Car-02)",
-          type: "Car",
-          maxLoadCapacityKg: 400,
-          odometerKm: 8000,
-          acquisitionCost: 18000,
-          region: "East",
-          status: VehicleStatus.RETIRED,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: "v-4",
-          registrationNumber: "Bus-04",
-          name: "Mercedes Sprinter shuttle (Bus-04)",
-          type: "Bus",
-          maxLoadCapacityKg: 3000,
-          odometerKm: 60000,
-          acquisitionCost: 120000,
-          region: "West",
-          status: VehicleStatus.AVAILABLE,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: "v-5",
-          registrationNumber: "Van-06",
-          name: "Ram ProMaster Cargo (Van-06)",
-          type: "Van",
-          maxLoadCapacityKg: 800,
-          odometerKm: 14000,
-          acquisitionCost: 28000,
-          region: "North",
-          status: VehicleStatus.ON_TRIP,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-      ],
-      drivers: [
-        {
-          id: "d-1",
-          name: "Alex Kamal",
-          licenseNumber: "DL-1001",
-          licenseCategory: "LMV",
-          licenseExpiryDate: oneYearFromToday.toISOString().split("T")[0],
-          contactNumber: "+1-555-0100",
-          safetyScore: 95,
-          status: DriverStatus.AVAILABLE,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: "d-2",
-          name: "Sam Chola",
-          licenseNumber: "DL-2002",
-          licenseCategory: "HMV",
-          licenseExpiryDate: sixMonthsFromToday.toISOString().split("T")[0],
-          contactNumber: "+1-555-0200",
-          safetyScore: 88,
-          status: DriverStatus.ON_TRIP,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: "d-3",
-          name: "Jordan Belfort",
-          licenseNumber: "DL-3003",
-          licenseCategory: "LMV",
-          licenseExpiryDate: twoMonthsAgo.toISOString().split("T")[0], // Expired!
-          contactNumber: "+1-555-0300",
-          safetyScore: 72,
-          status: DriverStatus.AVAILABLE,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: "d-4",
-          name: "Casey Jones",
-          licenseNumber: "DL-4040",
-          licenseCategory: "HMV",
-          licenseExpiryDate: nineMonthsFromToday.toISOString().split("T")[0],
-          contactNumber: "+1-555-0400",
-          safetyScore: 64,
-          status: DriverStatus.SUSPENDED,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: "d-5",
-          name: "Taylor Mason",
-          licenseNumber: "DL-5050",
-          licenseCategory: "LMV",
-          licenseExpiryDate: twoYearsFromToday.toISOString().split("T")[0],
-          contactNumber: "+1-555-0500",
-          safetyScore: 90,
-          status: DriverStatus.AVAILABLE,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-      ],
-      trips: [
-        {
-          id: "t-1",
-          source: "Logistics Hub Alpha",
-          destination: "Downtown Retail Outlet",
-          vehicleId: "v-5",
-          driverId: "d-2",
-          cargoWeightKg: 450,
-          plannedDistanceKm: 42,
-          startOdometerKm: 13958,
-          endOdometerKm: null,
-          fuelConsumedL: null,
-          revenue: 1200,
-          status: TripStatus.DISPATCHED,
-          createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
-          dispatchedAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-          completedAt: null,
-          cancelledAt: null
-        }
-      ],
-      maintenanceLogs: [
-        {
-          id: "m-1",
-          vehicleId: "v-2",
-          description: "Transmission system calibration & fluid replacement",
-          cost: 450,
-          status: MaintenanceStatus.OPEN,
-          openedAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-          closedAt: null
-        }
-      ],
-      fuelLogs: [
-        {
-          id: "f-1",
-          vehicleId: "v-1",
-          tripId: null,
-          liters: 45,
-          cost: 95,
-          date: new Date(Date.now() - 3600000 * 48).toISOString()
-        }
-      ],
-      expenses: [
-        {
-          id: "e-1",
-          vehicleId: "v-1",
-          tripId: null,
-          category: "MISC",
-          amount: 25,
-          date: new Date(Date.now() - 3600000 * 48).toISOString(),
-          description: "Windshield washer fluid and microfibers"
-        }
-      ]
-    };
-    this.save();
-  }
-
+class MySQLDatabase {
   // QUERY HELPERS
-  public getUsers() { return this.data.users; }
-  public getUserByEmail(email: string) { return this.data.users.find(u => u.email === email); }
-  public getVehicles() { return this.data.vehicles; }
-  public getDrivers() { return this.data.drivers; }
-  public getTrips() { return this.data.trips; }
-  public getMaintenanceLogs() { return this.data.maintenanceLogs; }
-  public getFuelLogs() { return this.data.fuelLogs; }
-  public getExpenses() { return this.data.expenses; }
+  public async getUsers(): Promise<User[]> {
+    const [rows] = await pool.query("SELECT * FROM users");
+    return rows as User[];
+  }
+
+  public async getUserByEmail(email: string): Promise<User | undefined> {
+    const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+    const users = rows as User[];
+    return users[0];
+  }
+
+  public async getVehicles(): Promise<Vehicle[]> {
+    const [rows] = await pool.query("SELECT * FROM vehicles");
+    return rows as Vehicle[];
+  }
+
+  public async getDrivers(): Promise<Driver[]> {
+    const [rows] = await pool.query("SELECT * FROM drivers");
+    return rows as Driver[];
+  }
+
+  public async getTrips(): Promise<Trip[]> {
+    const [rows] = await pool.query("SELECT * FROM trips");
+    return rows as Trip[];
+  }
+
+  public async getMaintenanceLogs(): Promise<MaintenanceLog[]> {
+    const [rows] = await pool.query("SELECT * FROM maintenance_logs");
+    return rows as MaintenanceLog[];
+  }
+
+  public async getFuelLogs(): Promise<FuelLog[]> {
+    const [rows] = await pool.query("SELECT * FROM fuel_logs");
+    return rows as FuelLog[];
+  }
+
+  public async getExpenses(): Promise<Expense[]> {
+    const [rows] = await pool.query("SELECT * FROM expenses");
+    return rows as Expense[];
+  }
 
   // CREATE / EDIT ENTITIES
-  public addVehicle(vehicle: Omit<Vehicle, "id" | "createdAt" | "updatedAt">): Vehicle {
-    const existing = this.data.vehicles.find(v => v.registrationNumber.toLowerCase() === vehicle.registrationNumber.toLowerCase());
-    if (existing) {
+  public async addVehicle(vehicle: Omit<Vehicle, "id" | "createdAt" | "updatedAt">): Promise<Vehicle> {
+    const [existing] = await pool.query("SELECT * FROM vehicles WHERE registrationNumber = ?", [vehicle.registrationNumber]);
+    if ((existing as any[]).length > 0) {
       throw new Error(`Vehicle with registration number '${vehicle.registrationNumber}' already exists.`);
     }
 
-    const newVehicle: Vehicle = {
-      ...vehicle,
-      id: "v-" + Math.random().toString(36).substring(2, 9),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    this.data.vehicles.push(newVehicle);
-    this.save();
-    return newVehicle;
+    const id = "v-" + Math.random().toString(36).substring(2, 9);
+    const now = new Date();
+    
+    await pool.query(
+      "INSERT INTO vehicles (id, registrationNumber, name, type, maxLoadCapacityKg, odometerKm, acquisitionCost, region, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [id, vehicle.registrationNumber, vehicle.name, vehicle.type, vehicle.maxLoadCapacityKg, vehicle.odometerKm, vehicle.acquisitionCost, vehicle.region, vehicle.status, now, now]
+    );
+
+    return { ...vehicle, id, createdAt: now.toISOString(), updatedAt: now.toISOString() };
   }
 
-  public updateVehicle(id: string, updates: Partial<Vehicle>): Vehicle {
-    const idx = this.data.vehicles.findIndex(v => v.id === id);
-    if (idx === -1) throw new Error("Vehicle not found");
+  public async updateVehicle(id: string, updates: Partial<Vehicle>): Promise<Vehicle> {
+    const [rows] = await pool.query("SELECT * FROM vehicles WHERE id = ?", [id]);
+    const vehicles = rows as Vehicle[];
+    if (vehicles.length === 0) throw new Error("Vehicle not found");
+    const vehicle = vehicles[0];
 
-    if (updates.registrationNumber) {
-      const dupe = this.data.vehicles.find(v => v.id !== id && v.registrationNumber.toLowerCase() === updates.registrationNumber!.toLowerCase());
-      if (dupe) throw new Error("Registration number already exists");
+    if (updates.registrationNumber && updates.registrationNumber !== vehicle.registrationNumber) {
+      const [dupe] = await pool.query("SELECT * FROM vehicles WHERE registrationNumber = ? AND id != ?", [updates.registrationNumber, id]);
+      if ((dupe as any[]).length > 0) throw new Error("Registration number already exists");
     }
 
-    this.data.vehicles[idx] = {
-      ...this.data.vehicles[idx],
-      ...updates,
-      updatedAt: new Date().toISOString()
-    };
-    this.save();
-    return this.data.vehicles[idx];
+    const merged = { ...vehicle, ...updates, updatedAt: new Date() };
+    await pool.query(
+      "UPDATE vehicles SET registrationNumber=?, name=?, type=?, maxLoadCapacityKg=?, odometerKm=?, acquisitionCost=?, region=?, status=?, updatedAt=? WHERE id=?",
+      [merged.registrationNumber, merged.name, merged.type, merged.maxLoadCapacityKg, merged.odometerKm, merged.acquisitionCost, merged.region, merged.status, merged.updatedAt, id]
+    );
+    
+    return { ...merged, updatedAt: merged.updatedAt.toISOString() };
   }
 
-  public retireVehicle(id: string): Vehicle {
-    const vehicle = this.data.vehicles.find(v => v.id === id);
-    if (!vehicle) throw new Error("Vehicle not found");
+  public async retireVehicle(id: string): Promise<Vehicle> {
+    const [rows] = await pool.query("SELECT * FROM vehicles WHERE id = ?", [id]);
+    const vehicles = rows as Vehicle[];
+    if (vehicles.length === 0) throw new Error("Vehicle not found");
+    
+    const vehicle = vehicles[0];
     if (vehicle.status === VehicleStatus.ON_TRIP) {
       throw new Error("Cannot retire a vehicle currently out on a trip!");
     }
     
-    // Side effect: If vehicle is retired, make sure they are not AVAILABLE
+    await pool.query("UPDATE vehicles SET status=?, updatedAt=? WHERE id=?", [VehicleStatus.RETIRED, new Date(), id]);
     vehicle.status = VehicleStatus.RETIRED;
-    vehicle.updatedAt = new Date().toISOString();
-    this.save();
     return vehicle;
   }
 
-  public addDriver(driver: Omit<Driver, "id" | "createdAt" | "updatedAt">): Driver {
-    const existing = this.data.drivers.find(d => d.licenseNumber.toLowerCase() === driver.licenseNumber.toLowerCase());
-    if (existing) {
+  public async addDriver(driver: Omit<Driver, "id" | "createdAt" | "updatedAt">): Promise<Driver> {
+    const [existing] = await pool.query("SELECT * FROM drivers WHERE licenseNumber = ?", [driver.licenseNumber]);
+    if ((existing as any[]).length > 0) {
       throw new Error(`Driver with license number '${driver.licenseNumber}' already exists.`);
     }
 
-    const newDriver: Driver = {
-      ...driver,
-      id: "d-" + Math.random().toString(36).substring(2, 9),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    this.data.drivers.push(newDriver);
-    this.save();
-    return newDriver;
+    const id = "d-" + Math.random().toString(36).substring(2, 9);
+    const now = new Date();
+    
+    await pool.query(
+      "INSERT INTO drivers (id, name, licenseNumber, licenseCategory, licenseExpiryDate, contactNumber, safetyScore, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [id, driver.name, driver.licenseNumber, driver.licenseCategory, driver.licenseExpiryDate, driver.contactNumber, driver.safetyScore, driver.status, now, now]
+    );
+
+    return { ...driver, id, createdAt: now.toISOString(), updatedAt: now.toISOString() };
   }
 
-  public updateDriver(id: string, updates: Partial<Driver>): Driver {
-    const idx = this.data.drivers.findIndex(d => d.id === id);
-    if (idx === -1) throw new Error("Driver not found");
+  public async updateDriver(id: string, updates: Partial<Driver>): Promise<Driver> {
+    const [rows] = await pool.query("SELECT * FROM drivers WHERE id = ?", [id]);
+    const drivers = rows as Driver[];
+    if (drivers.length === 0) throw new Error("Driver not found");
+    const driver = drivers[0];
 
-    if (updates.licenseNumber) {
-      const dupe = this.data.drivers.find(d => d.id !== id && d.licenseNumber.toLowerCase() === updates.licenseNumber!.toLowerCase());
-      if (dupe) throw new Error("License number already exists");
+    if (updates.licenseNumber && updates.licenseNumber !== driver.licenseNumber) {
+      const [dupe] = await pool.query("SELECT * FROM drivers WHERE licenseNumber = ? AND id != ?", [updates.licenseNumber, id]);
+      if ((dupe as any[]).length > 0) throw new Error("License number already exists");
     }
 
-    this.data.drivers[idx] = {
-      ...this.data.drivers[idx],
-      ...updates,
-      updatedAt: new Date().toISOString()
-    };
-    this.save();
-    return this.data.drivers[idx];
+    const merged = { ...driver, ...updates, updatedAt: new Date() };
+    await pool.query(
+      "UPDATE drivers SET name=?, licenseNumber=?, licenseCategory=?, licenseExpiryDate=?, contactNumber=?, safetyScore=?, status=?, updatedAt=? WHERE id=?",
+      [merged.name, merged.licenseNumber, merged.licenseCategory, merged.licenseExpiryDate, merged.contactNumber, merged.safetyScore, merged.status, merged.updatedAt, id]
+    );
+    
+    return { ...merged, updatedAt: merged.updatedAt.toISOString() };
   }
 
-  public suspendDriver(id: string, suspend: boolean): Driver {
-    const idx = this.data.drivers.findIndex(d => d.id === id);
-    if (idx === -1) throw new Error("Driver not found");
-
-    const driver = this.data.drivers[idx];
+  public async suspendDriver(id: string, suspend: boolean): Promise<Driver> {
+    const [rows] = await pool.query("SELECT * FROM drivers WHERE id = ?", [id]);
+    const drivers = rows as Driver[];
+    if (drivers.length === 0) throw new Error("Driver not found");
+    
+    const driver = drivers[0];
     if (suspend && driver.status === DriverStatus.ON_TRIP) {
       throw new Error("Cannot suspend a driver currently mid-trip!");
     }
 
-    driver.status = suspend ? DriverStatus.SUSPENDED : DriverStatus.AVAILABLE;
-    driver.updatedAt = new Date().toISOString();
-    this.save();
+    const newStatus = suspend ? DriverStatus.SUSPENDED : DriverStatus.AVAILABLE;
+    await pool.query("UPDATE drivers SET status=?, updatedAt=? WHERE id=?", [newStatus, new Date(), id]);
+    driver.status = newStatus;
     return driver;
   }
 
-  // STATE MACHINE STATE CHANGES FOR TRIPS
+  // TRIPS
+  public async createTrip(tripData: Omit<Trip, "id" | "status" | "createdAt" | "dispatchedAt" | "completedAt" | "cancelledAt" | "startOdometerKm" | "endOdometerKm" | "fuelConsumedL">): Promise<Trip> {
+    const [vRows] = await pool.query("SELECT * FROM vehicles WHERE id = ?", [tripData.vehicleId]);
+    const vehicles = vRows as Vehicle[];
+    if (vehicles.length === 0) throw new Error("Selected vehicle does not exist");
+    const vehicle = vehicles[0];
 
-  // Create Draft Trip
-  public createTrip(tripData: Omit<Trip, "id" | "status" | "createdAt" | "dispatchedAt" | "completedAt" | "cancelledAt" | "startOdometerKm" | "endOdometerKm" | "fuelConsumedL">): Trip {
-    const vehicle = this.data.vehicles.find(v => v.id === tripData.vehicleId);
-    const driver = this.data.drivers.find(d => d.id === tripData.driverId);
+    const [dRows] = await pool.query("SELECT * FROM drivers WHERE id = ?", [tripData.driverId]);
+    const drivers = dRows as Driver[];
+    if (drivers.length === 0) throw new Error("Selected driver does not exist");
+    const driver = drivers[0];
 
-    if (!vehicle) throw new Error("Selected vehicle does not exist");
-    if (!driver) throw new Error("Selected driver does not exist");
-
-    // Guard: Cargo Capacity check
     if (tripData.cargoWeightKg > vehicle.maxLoadCapacityKg) {
-      throw new Error(`Cargo weight (${tripData.cargoWeightKg}kg) exceeds the maximum capacity of vehicle ${vehicle.registrationNumber} (${vehicle.maxLoadCapacityKg}kg).`);
+      throw new Error(`Cargo weight (${tripData.cargoWeightKg}kg) exceeds capacity of vehicle (${vehicle.maxLoadCapacityKg}kg).`);
     }
 
-    // Guard: License expiration check
-    const expiry = new Date(driver.licenseExpiryDate);
-    if (expiry < new Date()) {
-      throw new Error(`Driver ${driver.name}'s license has expired (Expiry: ${driver.licenseExpiryDate}).`);
-    }
-
-    // Guard: Suspension status
-    if (driver.status === DriverStatus.SUSPENDED) {
-      throw new Error(`Driver ${driver.name} is currently suspended and cannot be assigned to trips.`);
-    }
-
-    // Guard: Driver off-duty
-    if (driver.status === DriverStatus.OFF_DUTY) {
-      throw new Error(`Driver ${driver.name} is off-duty.`);
-    }
-
-    const newTrip: Trip = {
-      ...tripData,
-      id: "t-" + Math.random().toString(36).substring(2, 9),
-      startOdometerKm: null,
-      endOdometerKm: null,
-      fuelConsumedL: null,
-      revenue: tripData.revenue || 0,
-      status: TripStatus.DRAFT,
-      createdAt: new Date().toISOString(),
-      dispatchedAt: null,
-      completedAt: null,
-      cancelledAt: null
-    };
-
-    this.data.trips.push(newTrip);
-    this.save();
-    return newTrip;
-  }
-
-  // Dispatch Trip (DRAFT -> DISPATCHED)
-  public dispatchTrip(id: string): Trip {
-    const tripIdx = this.data.trips.findIndex(t => t.id === id);
-    if (tripIdx === -1) throw new Error("Trip not found");
-    const trip = this.data.trips[tripIdx];
-
-    if (trip.status !== TripStatus.DRAFT) {
-      throw new Error("Only Draft trips can be dispatched");
-    }
-
-    const vehicle = this.data.vehicles.find(v => v.id === trip.vehicleId);
-    const driver = this.data.drivers.find(d => d.id === trip.driverId);
-
-    if (!vehicle) throw new Error("Vehicle not found");
-    if (!driver) throw new Error("Driver not found");
-
-    // Re-verify availability guards inside the transaction block
-    if (vehicle.status !== VehicleStatus.AVAILABLE) {
-      throw new Error(`Vehicle ${vehicle.registrationNumber} is currently unavailable (Status: ${vehicle.status}).`);
-    }
-    if (driver.status !== DriverStatus.AVAILABLE) {
-      throw new Error(`Driver ${driver.name} is currently unavailable (Status: ${driver.status}).`);
-    }
-
-    // Run License & Expiry checks again
-    const expiry = new Date(driver.licenseExpiryDate);
-    if (expiry < new Date()) {
+    if (new Date(driver.licenseExpiryDate) < new Date()) {
       throw new Error(`Driver ${driver.name}'s license has expired.`);
     }
 
-    // Apply Side Effects atomically
-    trip.status = TripStatus.DISPATCHED;
-    trip.dispatchedAt = new Date().toISOString();
-    trip.startOdometerKm = vehicle.odometerKm;
+    if (driver.status === DriverStatus.SUSPENDED || driver.status === DriverStatus.OFF_DUTY) {
+      throw new Error(`Driver ${driver.name} is unavailable (${driver.status}).`);
+    }
 
-    vehicle.status = VehicleStatus.ON_TRIP;
-    driver.status = DriverStatus.ON_TRIP;
+    const id = "t-" + Math.random().toString(36).substring(2, 9);
+    const now = new Date();
 
-    this.save();
-    return trip;
+    await pool.query(
+      "INSERT INTO trips (id, source, destination, vehicleId, driverId, cargoWeightKg, plannedDistanceKm, startOdometerKm, endOdometerKm, fuelConsumedL, revenue, status, createdAt, dispatchedAt, completedAt, cancelledAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [id, tripData.source, tripData.destination, tripData.vehicleId, tripData.driverId, tripData.cargoWeightKg, tripData.plannedDistanceKm, null, null, null, tripData.revenue || 0, TripStatus.DRAFT, now, null, null, null]
+    );
+
+    return { ...tripData, id, revenue: tripData.revenue || 0, status: TripStatus.DRAFT, createdAt: now.toISOString(), startOdometerKm: null, endOdometerKm: null, fuelConsumedL: null, dispatchedAt: null, completedAt: null, cancelledAt: null };
   }
 
-  // Complete Trip (DISPATCHED -> COMPLETED)
-  public completeTrip(id: string, endOdometerKm: number, fuelConsumedL: number, fuelCost: number, revenue: number): Trip {
-    const tripIdx = this.data.trips.findIndex(t => t.id === id);
-    if (tripIdx === -1) throw new Error("Trip not found");
-    const trip = this.data.trips[tripIdx];
+  public async dispatchTrip(id: string): Promise<Trip> {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      
+      const [tRows] = await connection.query("SELECT * FROM trips WHERE id = ? FOR UPDATE", [id]);
+      const trips = tRows as Trip[];
+      if (trips.length === 0) throw new Error("Trip not found");
+      const trip = trips[0];
 
-    if (trip.status !== TripStatus.DISPATCHED) {
-      throw new Error("Only active Dispatched trips can be completed");
+      if (trip.status !== TripStatus.DRAFT) throw new Error("Only Draft trips can be dispatched");
+
+      const [vRows] = await connection.query("SELECT * FROM vehicles WHERE id = ? FOR UPDATE", [trip.vehicleId]);
+      const vehicle = (vRows as Vehicle[])[0];
+      
+      const [dRows] = await connection.query("SELECT * FROM drivers WHERE id = ? FOR UPDATE", [trip.driverId]);
+      const driver = (dRows as Driver[])[0];
+
+      if (vehicle.status !== VehicleStatus.AVAILABLE) throw new Error(`Vehicle ${vehicle.registrationNumber} is unavailable`);
+      if (driver.status !== DriverStatus.AVAILABLE) throw new Error(`Driver ${driver.name} is unavailable`);
+      if (new Date(driver.licenseExpiryDate) < new Date()) throw new Error(`Driver ${driver.name}'s license expired`);
+
+      const now = new Date();
+      await connection.query("UPDATE trips SET status=?, dispatchedAt=?, startOdometerKm=? WHERE id=?", [TripStatus.DISPATCHED, now, vehicle.odometerKm, id]);
+      await connection.query("UPDATE vehicles SET status=?, updatedAt=? WHERE id=?", [VehicleStatus.ON_TRIP, now, vehicle.id]);
+      await connection.query("UPDATE drivers SET status=?, updatedAt=? WHERE id=?", [DriverStatus.ON_TRIP, now, driver.id]);
+      
+      await connection.commit();
+      trip.status = TripStatus.DISPATCHED;
+      trip.dispatchedAt = now.toISOString();
+      trip.startOdometerKm = vehicle.odometerKm;
+      return trip;
+    } catch (err) {
+      await connection.rollback();
+      throw err;
+    } finally {
+      connection.release();
     }
-
-    const startOdo = trip.startOdometerKm ?? 0;
-    if (endOdometerKm < startOdo) {
-      throw new Error(`Ending odometer (${endOdometerKm} km) cannot be less than starting odometer (${startOdo} km).`);
-    }
-
-    const vehicle = this.data.vehicles.find(v => v.id === trip.vehicleId);
-    const driver = this.data.drivers.find(d => d.id === trip.driverId);
-
-    if (!vehicle) throw new Error("Vehicle not found");
-    if (!driver) throw new Error("Driver not found");
-
-    // Apply State Changes
-    trip.status = TripStatus.COMPLETED;
-    trip.completedAt = new Date().toISOString();
-    trip.endOdometerKm = endOdometerKm;
-    trip.fuelConsumedL = fuelConsumedL;
-    trip.revenue = revenue;
-
-    // Side effects on vehicle & driver
-    vehicle.status = VehicleStatus.AVAILABLE;
-    vehicle.odometerKm = endOdometerKm;
-    driver.status = DriverStatus.AVAILABLE;
-
-    // Log the fuel transaction atomically if logged
-    if (fuelConsumedL > 0) {
-      const fuelLogId = "f-" + Math.random().toString(36).substring(2, 9);
-      const fuelLog: FuelLog = {
-        id: fuelLogId,
-        vehicleId: vehicle.id,
-        tripId: trip.id,
-        liters: fuelConsumedL,
-        cost: fuelCost,
-        date: new Date().toISOString()
-      };
-      this.data.fuelLogs.push(fuelLog);
-
-      // Create a related fuel expense entry
-      const expenseId = "e-" + Math.random().toString(36).substring(2, 9);
-      const fuelExpense: Expense = {
-        id: expenseId,
-        vehicleId: vehicle.id,
-        tripId: trip.id,
-        category: "FUEL",
-        amount: fuelCost,
-        date: new Date().toISOString(),
-        description: `Trip completion fuel log: ${fuelConsumedL} liters`
-      };
-      this.data.expenses.push(fuelExpense);
-    }
-
-    this.save();
-    return trip;
   }
 
-  // Cancel Trip
-  public cancelTrip(id: string): Trip {
-    const tripIdx = this.data.trips.findIndex(t => t.id === id);
-    if (tripIdx === -1) throw new Error("Trip not found");
-    const trip = this.data.trips[tripIdx];
+  public async completeTrip(id: string, endOdometerKm: number, fuelConsumedL: number, fuelCost: number, revenue: number): Promise<Trip> {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      
+      const [tRows] = await connection.query("SELECT * FROM trips WHERE id = ? FOR UPDATE", [id]);
+      const trips = tRows as Trip[];
+      if (trips.length === 0) throw new Error("Trip not found");
+      const trip = trips[0];
 
-    if (trip.status === TripStatus.COMPLETED || trip.status === TripStatus.CANCELLED) {
-      throw new Error("Cannot cancel a trip that is already completed or cancelled");
-    }
+      if (trip.status !== TripStatus.DISPATCHED) throw new Error("Only active Dispatched trips can be completed");
+      if (endOdometerKm < (trip.startOdometerKm ?? 0)) throw new Error("Ending odometer cannot be less than starting odometer");
 
-    const wasDispatched = trip.status === TripStatus.DISPATCHED;
+      const now = new Date();
+      
+      await connection.query(
+        "UPDATE trips SET status=?, completedAt=?, endOdometerKm=?, fuelConsumedL=?, revenue=? WHERE id=?",
+        [TripStatus.COMPLETED, now, endOdometerKm, fuelConsumedL, revenue, id]
+      );
+      await connection.query("UPDATE vehicles SET status=?, odometerKm=?, updatedAt=? WHERE id=?", [VehicleStatus.AVAILABLE, endOdometerKm, now, trip.vehicleId]);
+      await connection.query("UPDATE drivers SET status=?, updatedAt=? WHERE id=?", [DriverStatus.AVAILABLE, now, trip.driverId]);
 
-    trip.status = TripStatus.CANCELLED;
-    trip.cancelledAt = new Date().toISOString();
-
-    // If it was dispatched, release the vehicle and driver back to AVAILABLE
-    if (wasDispatched) {
-      const vehicle = this.data.vehicles.find(v => v.id === trip.vehicleId);
-      const driver = this.data.drivers.find(d => d.id === trip.driverId);
-
-      if (vehicle && vehicle.status === VehicleStatus.ON_TRIP) {
-        vehicle.status = VehicleStatus.AVAILABLE;
+      if (fuelConsumedL > 0) {
+        const fId = "f-" + Math.random().toString(36).substring(2, 9);
+        await connection.query(
+          "INSERT INTO fuel_logs (id, vehicleId, tripId, liters, cost, date) VALUES (?, ?, ?, ?, ?, ?)",
+          [fId, trip.vehicleId, trip.id, fuelConsumedL, fuelCost, now]
+        );
+        
+        const eId = "e-" + Math.random().toString(36).substring(2, 9);
+        await connection.query(
+          "INSERT INTO expenses (id, vehicleId, tripId, category, amount, date, description) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          [eId, trip.vehicleId, trip.id, "FUEL", fuelCost, now, `Trip completion fuel log`]
+        );
       }
-      if (driver && driver.status === DriverStatus.ON_TRIP) {
-        driver.status = DriverStatus.AVAILABLE;
+
+      await connection.commit();
+      trip.status = TripStatus.COMPLETED;
+      return trip;
+    } catch (err) {
+      await connection.rollback();
+      throw err;
+    } finally {
+      connection.release();
+    }
+  }
+
+  public async cancelTrip(id: string): Promise<Trip> {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      const [tRows] = await connection.query("SELECT * FROM trips WHERE id = ? FOR UPDATE", [id]);
+      const trips = tRows as Trip[];
+      if (trips.length === 0) throw new Error("Trip not found");
+      const trip = trips[0];
+
+      if (trip.status === TripStatus.COMPLETED || trip.status === TripStatus.CANCELLED) {
+        throw new Error("Cannot cancel completed or already cancelled trip");
       }
-    }
 
-    this.save();
-    return trip;
+      const wasDispatched = trip.status === TripStatus.DISPATCHED;
+      const now = new Date();
+
+      await connection.query("UPDATE trips SET status=?, cancelledAt=? WHERE id=?", [TripStatus.CANCELLED, now, id]);
+
+      if (wasDispatched) {
+        await connection.query("UPDATE vehicles SET status=?, updatedAt=? WHERE id=? AND status=?", [VehicleStatus.AVAILABLE, now, trip.vehicleId, VehicleStatus.ON_TRIP]);
+        await connection.query("UPDATE drivers SET status=?, updatedAt=? WHERE id=? AND status=?", [DriverStatus.AVAILABLE, now, trip.driverId, DriverStatus.ON_TRIP]);
+      }
+
+      await connection.commit();
+      trip.status = TripStatus.CANCELLED;
+      return trip;
+    } catch (err) {
+      await connection.rollback();
+      throw err;
+    } finally {
+      connection.release();
+    }
   }
 
-  // MAINTENANCE ACTIONS
-  public openMaintenance(vehicleId: string, description: string, cost: number): MaintenanceLog {
-    const vehicle = this.data.vehicles.find(v => v.id === vehicleId);
-    if (!vehicle) throw new Error("Vehicle not found");
+  // MAINTENANCE
+  public async openMaintenance(vehicleId: string, description: string, cost: number): Promise<MaintenanceLog> {
+    const [vRows] = await pool.query("SELECT * FROM vehicles WHERE id = ?", [vehicleId]);
+    if ((vRows as any[]).length === 0) throw new Error("Vehicle not found");
+    const vehicle = (vRows as Vehicle[])[0];
 
-    if (vehicle.status !== VehicleStatus.AVAILABLE) {
-      throw new Error(`Vehicle ${vehicle.registrationNumber} cannot start maintenance since its status is ${vehicle.status}.`);
-    }
+    if (vehicle.status !== VehicleStatus.AVAILABLE) throw new Error(`Vehicle is ${vehicle.status}`);
 
-    // Set vehicle status to IN_SHOP
-    vehicle.status = VehicleStatus.IN_SHOP;
-    vehicle.updatedAt = new Date().toISOString();
+    const id = "m-" + Math.random().toString(36).substring(2, 9);
+    const now = new Date();
 
-    const log: MaintenanceLog = {
-      id: "m-" + Math.random().toString(36).substring(2, 9),
-      vehicleId,
-      description,
-      cost,
-      status: MaintenanceStatus.OPEN,
-      openedAt: new Date().toISOString(),
-      closedAt: null
-    };
+    await pool.query("UPDATE vehicles SET status=?, updatedAt=? WHERE id=?", [VehicleStatus.IN_SHOP, now, vehicleId]);
+    await pool.query(
+      "INSERT INTO maintenance_logs (id, vehicleId, description, cost, status, openedAt, closedAt) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [id, vehicleId, description, cost, MaintenanceStatus.OPEN, now, null]
+    );
 
-    this.data.maintenanceLogs.push(log);
-    this.save();
-    return log;
+    return { id, vehicleId, description, cost, status: MaintenanceStatus.OPEN, openedAt: now.toISOString(), closedAt: null };
   }
 
-  public closeMaintenance(logId: string, actualCost: number): MaintenanceLog {
-    const logIdx = this.data.maintenanceLogs.findIndex(m => m.id === logId);
-    if (logIdx === -1) throw new Error("Maintenance log not found");
-    const log = this.data.maintenanceLogs[logIdx];
+  public async closeMaintenance(logId: string, actualCost: number): Promise<MaintenanceLog> {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      
+      const [mRows] = await connection.query("SELECT * FROM maintenance_logs WHERE id = ? FOR UPDATE", [logId]);
+      const logs = mRows as MaintenanceLog[];
+      if (logs.length === 0) throw new Error("Log not found");
+      const log = logs[0];
 
-    if (log.status !== MaintenanceStatus.OPEN) {
-      throw new Error("Maintenance is already closed");
+      if (log.status !== MaintenanceStatus.OPEN) throw new Error("Maintenance already closed");
+
+      const now = new Date();
+      await connection.query("UPDATE maintenance_logs SET status=?, closedAt=?, cost=? WHERE id=?", [MaintenanceStatus.CLOSED, now, actualCost, logId]);
+      await connection.query("UPDATE vehicles SET status=?, updatedAt=? WHERE id=? AND status=?", [VehicleStatus.AVAILABLE, now, log.vehicleId, VehicleStatus.IN_SHOP]);
+
+      const eId = "e-" + Math.random().toString(36).substring(2, 9);
+      await connection.query(
+        "INSERT INTO expenses (id, vehicleId, tripId, category, amount, date, description) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [eId, log.vehicleId, null, "MAINTENANCE", actualCost, now, `Completed maintenance`]
+      );
+
+      await connection.commit();
+      log.status = MaintenanceStatus.CLOSED;
+      log.cost = actualCost;
+      return log;
+    } catch (err) {
+      await connection.rollback();
+      throw err;
+    } finally {
+      connection.release();
     }
-
-    log.status = MaintenanceStatus.CLOSED;
-    log.closedAt = new Date().toISOString();
-    log.cost = actualCost;
-
-    // Side effect: Release vehicle unless it was separately marked as RETIRED in the meantime
-    const vehicle = this.data.vehicles.find(v => v.id === log.vehicleId);
-    if (vehicle && vehicle.status === VehicleStatus.IN_SHOP) {
-      vehicle.status = VehicleStatus.AVAILABLE;
-      vehicle.updatedAt = new Date().toISOString();
-    }
-
-    // Record maintenance cost as an expense
-    const expenseId = "e-" + Math.random().toString(36).substring(2, 9);
-    const mExpense: Expense = {
-      id: expenseId,
-      vehicleId: log.vehicleId,
-      tripId: null,
-      category: "MAINTENANCE",
-      amount: actualCost,
-      date: new Date().toISOString(),
-      description: `Completed maintenance: ${log.description}`
-    };
-    this.data.expenses.push(mExpense);
-
-    this.save();
-    return log;
   }
 
-  // OTHER DATA ENTRIES
-  public addFuelLog(vehicleId: string, liters: number, cost: number): FuelLog {
-    const vehicle = this.data.vehicles.find(v => v.id === vehicleId);
-    if (!vehicle) throw new Error("Vehicle not found");
+  // OTHER LOGS
+  public async addFuelLog(vehicleId: string, liters: number, cost: number): Promise<FuelLog> {
+    const id = "f-" + Math.random().toString(36).substring(2, 9);
+    const now = new Date();
+    
+    await pool.query(
+      "INSERT INTO fuel_logs (id, vehicleId, tripId, liters, cost, date) VALUES (?, ?, ?, ?, ?, ?)",
+      [id, vehicleId, null, liters, cost, now]
+    );
 
-    const newLog: FuelLog = {
-      id: "f-" + Math.random().toString(36).substring(2, 9),
-      vehicleId,
-      tripId: null,
-      liters,
-      cost,
-      date: new Date().toISOString()
-    };
-    this.data.fuelLogs.push(newLog);
+    const eId = "e-" + Math.random().toString(36).substring(2, 9);
+    await pool.query(
+      "INSERT INTO expenses (id, vehicleId, tripId, category, amount, date, description) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [eId, vehicleId, null, "FUEL", cost, now, `Manual Fuel Intake`]
+    );
 
-    // Fuel cost as expense
-    const expenseId = "e-" + Math.random().toString(36).substring(2, 9);
-    this.data.expenses.push({
-      id: expenseId,
-      vehicleId,
-      tripId: null,
-      category: "FUEL",
-      amount: cost,
-      date: new Date().toISOString(),
-      description: `Manual Fuel Intake: ${liters}L`
-    });
-
-    this.save();
-    return newLog;
+    return { id, vehicleId, tripId: null, liters, cost, date: now.toISOString() };
   }
 
-  public addExpense(expense: Omit<Expense, "id" | "date">): Expense {
-    const newExpense: Expense = {
-      ...expense,
-      id: "e-" + Math.random().toString(36).substring(2, 9),
-      date: new Date().toISOString()
-    };
-    this.data.expenses.push(newExpense);
-    this.save();
-    return newExpense;
+  public async addExpense(expense: Omit<Expense, "id" | "date">): Promise<Expense> {
+    const id = "e-" + Math.random().toString(36).substring(2, 9);
+    const now = new Date();
+    
+    await pool.query(
+      "INSERT INTO expenses (id, vehicleId, tripId, category, amount, date, description) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [id, expense.vehicleId || null, expense.tripId || null, expense.category, expense.amount, now, expense.description || null]
+    );
+
+    return { ...expense, id, date: now.toISOString() } as Expense;
   }
 }
 
-export const db = new JSONDatabase();
+export const db = new MySQLDatabase();
