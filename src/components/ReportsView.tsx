@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Download, FileText, BarChart3, HelpCircle, DollarSign, Fuel, TrendingUp, Navigation, Scale } from "lucide-react";
 import { Role, VehicleReport } from "../types";
 import { useLanguage } from "../LanguageContext";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface ReportsViewProps {
   analyticsReport: VehicleReport[];
@@ -17,57 +18,11 @@ export default function ReportsView({
 
   // Export CSV functionality
   const handleExportCSV = () => {
-    let headers: string[] = [];
-    let rows: string[][] = [];
-    let filename = "";
-
-    if (reportType === "EFFICIENCY") {
-      headers = ["Vehicle ID", "Registration Number", "Model Name", "Total Distance (km)", "Total Fuel Consumed (L)", "Fuel Efficiency (km/L)"];
-      rows = analyticsReport.map(r => [
-        r.vehicleId,
-        r.registrationNumber,
-        r.name,
-        r.totalDistanceKm.toString(),
-        r.totalFuelLiters.toString(),
-        r.fuelEfficiencyKmPerL.toString()
-      ]);
-      filename = "transitops_fuel_efficiency.csv";
-    } else if (reportType === "COST") {
-      headers = ["Vehicle ID", "Registration Number", "Model Name", "Acquisition Cost ($)", "Fuel Costs ($)", "Maintenance Costs ($)", "Other Expenses ($)", "Total Operational Cost ($)"];
-      rows = analyticsReport.map(r => [
-        r.vehicleId,
-        r.registrationNumber,
-        r.name,
-        r.acquisitionCost.toString(),
-        r.fuelCost.toString(),
-        r.maintenanceCost.toString(),
-        r.otherExpenses.toString(),
-        r.operationalCost.toString()
-      ]);
-      filename = "transitops_operational_costs.csv";
-    } else {
-      headers = ["Vehicle ID", "Registration Number", "Model Name", "Acquisition Cost ($)", "Total Trips Revenue ($)", "Operational Expenses ($)", "Capital ROI (%)"];
-      rows = analyticsReport.map(r => [
-        r.vehicleId,
-        r.registrationNumber,
-        r.name,
-        r.acquisitionCost.toString(),
-        r.totalRevenue.toString(),
-        (r.fuelCost + r.maintenanceCost).toString(),
-        r.roiPercent.toString()
-      ]);
-      filename = "transitops_capital_roi.csv";
-    }
-
-    // Combine headers and rows
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + [headers.join(","), ...rows.map(e => e.map(val => `"${val.replace(/"/g, '""')}"`).join(","))].join("\n");
-    
-    const encodedUri = encodeURI(csvContent);
+    // Direct backend CSV download to satisfy /api/reports/export.csv
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", filename);
-    document.body.appendChild(link); // Required for FF
+    link.setAttribute("href", "/api/reports/export.csv");
+    link.setAttribute("download", "fleet_analytics_report.csv");
+    document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
@@ -143,52 +98,50 @@ export default function ReportsView({
         </button>
       </div>
 
-      {/* Highly creative visual analytics bar chart representation */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs">
+      {/* Highly creative visual analytics bar chart representation using Recharts */}
+      <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs animate-fade-in-up">
         <h2 className="text-base font-bold text-slate-900 mb-6 flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-blue-600" />
-          Visual Distribution Comparison
+          {reportType === "EFFICIENCY" 
+            ? "Fuel Efficiency Index (km/L)" 
+            : reportType === "COST" 
+              ? "Total Operational Cost ($)" 
+              : "Capital Payback ROI (%)"}
         </h2>
 
-        <div className="space-y-4">
-          {analyticsReport.map((r, i) => {
-            // Find ratio for visual representation
-            let ratio = 0;
-            let displayVal = "";
-            let color = "bg-blue-500";
-
-            if (reportType === "EFFICIENCY") {
-              // Efficiency: max of 15 km/l for standard scales
-              ratio = Math.min((r.fuelEfficiencyKmPerL / 12) * 100, 100);
-              displayVal = `${r.fuelEfficiencyKmPerL} km/L`;
-              color = "bg-blue-500";
-            } else if (reportType === "COST") {
-              const maxCost = Math.max(...analyticsReport.map(x => x.operationalCost), 1);
-              ratio = (r.operationalCost / maxCost) * 100;
-              displayVal = `$${r.operationalCost.toLocaleString()}`;
-              color = "bg-amber-500";
-            } else {
-              // ROI: scale -50% to 100%
-              ratio = Math.max(0, Math.min((r.roiPercent / 20) * 100, 100));
-              displayVal = `${r.roiPercent}% ROI`;
-              color = r.roiPercent >= 0 ? "bg-violet-500" : "bg-rose-500";
-            }
-
-            return (
-              <div key={i} className="space-y-1.5 animate-in fade-in slide-in-from-left duration-250">
-                <div className="flex justify-between items-center text-xs font-semibold">
-                  <span className="text-slate-700">{r.name} <span className="text-[10px] text-slate-400 font-mono">({r.registrationNumber})</span></span>
-                  <span className="font-mono text-slate-900">{displayVal}</span>
-                </div>
-                <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full rounded-full transition-all duration-500 ${color}`}
-                    style={{ width: `${ratio}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
+        <div className="h-80 w-full font-mono text-xs">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={analyticsReport.map(r => ({
+                name: r.registrationNumber,
+                value: reportType === "EFFICIENCY" ? r.fuelEfficiencyKmPerL : reportType === "COST" ? r.operationalCost : r.roiPercent,
+                model: r.name
+              }))}
+              margin={{ top: 10, right: 30, left: 10, bottom: 20 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="name" stroke="#64748b" tickLine={false} />
+              <YAxis stroke="#64748b" tickLine={false} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: "rgba(255, 255, 255, 0.95)", 
+                  border: "1px solid #e2e8f0", 
+                  borderRadius: "12px",
+                  boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.05)"
+                }}
+                formatter={(value: any) => [
+                  reportType === "EFFICIENCY" ? `${value} km/L` : reportType === "COST" ? `$${value}` : `${value}%`,
+                  reportType === "EFFICIENCY" ? "Efficiency" : reportType === "COST" ? "Cost" : "ROI"
+                ]}
+              />
+              <Bar 
+                dataKey="value" 
+                fill={reportType === "EFFICIENCY" ? "#3b82f6" : reportType === "COST" ? "#f59e0b" : "#8b5cf6"} 
+                radius={[8, 8, 0, 0]} 
+                barSize={45}
+              />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 

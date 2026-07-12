@@ -57,7 +57,7 @@ export default function App() {
 
   const navigateTo = (tabId: string, subpath: string = "") => {
     let path = "/" + tabId;
-    if (tabId === "dashboard") path = "/";
+    if (tabId === "dashboard") path = "/dashboard";
     if (subpath) path += "/" + subpath;
     
     window.history.pushState(null, "", path);
@@ -122,6 +122,8 @@ export default function App() {
         setActiveTab("fuel-expenses");
       } else if (path === "/reports") {
         setActiveTab("reports");
+      } else if (path === "/dashboard" || path === "/") {
+        setActiveTab("dashboard");
       } else {
         setActiveTab("dashboard");
       }
@@ -130,7 +132,7 @@ export default function App() {
     handleRouting();
     window.addEventListener("popstate", handleRouting);
     return () => window.removeEventListener("popstate", handleRouting);
-  }, []);
+  }, [] );
 
   // Core operational datasets
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
