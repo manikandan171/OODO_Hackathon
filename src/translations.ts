@@ -107,6 +107,7 @@ export const translations = {
     drv_err_fill_all: "Please fill out all fields before enrolling.",
     drv_action_suspend: "Suspend Operator",
     drv_action_unsuspend: "Reactivate Operator",
+    drv_view_license: "View License Photo",
 
     // Trips (Route Assignment)
     trip_title: "Route Assignment & Dispatch",
@@ -299,6 +300,7 @@ export const translations = {
     drv_err_fill_all: "பதிவு செய்வதற்கு முன் அனைத்து துறைகளையும் நிரப்பவும்.",
     drv_action_suspend: "பணி இடைநீக்கம் செய்",
     drv_action_unsuspend: "மீண்டும் பணியில் சேர்",
+    drv_view_license: "உரிம புகைப்படம்",
 
     // Trips (Route Assignment)
     trip_title: "பயண ஒதுக்கீடு & அனுப்புதல்",
@@ -491,6 +493,7 @@ export const translations = {
     drv_err_fill_all: "Complete todos los campos antes de registrar.",
     drv_action_suspend: "Suspender Operador",
     drv_action_unsuspend: "Reactivar Operador",
+    drv_view_license: "Ver Foto de Licencia",
 
     // Trips (Route Assignment)
     trip_title: "Asignación de Rutas y Despacho",

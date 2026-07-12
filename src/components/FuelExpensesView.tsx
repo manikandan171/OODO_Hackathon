@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Plus, Fuel, DollarSign, Calendar, FileText, Filter, AlertTriangle, Truck, Tag, Navigation, Bookmark } from "lucide-react";
 import { Role, FuelLog, Expense, Vehicle } from "../types";
+import { useLanguage } from "../LanguageContext";
 
 interface FuelExpensesViewProps {
   fuelLogs: FuelLog[];
@@ -19,6 +20,7 @@ export default function FuelExpensesView({
   onAddFuelLog,
   onAddExpense
 }: FuelExpensesViewProps) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<"FUEL" | "EXPENSE">("FUEL");
   const [error, setError] = useState<string | null>(null);
 
@@ -97,31 +99,31 @@ export default function FuelExpensesView({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Financial Log & Fuel Ledger</h1>
-        <p className="text-sm text-slate-500 mt-1">Audit vehicle operational costs, fuel refills, and toll expense journals.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("acc_title")}</h1>
+        <p className="text-sm text-slate-500 mt-1">{t("acc_subtitle")}</p>
       </div>
 
       {/* Tabs */}
       <div className="flex border-b border-slate-200 gap-1.5">
         <button
           onClick={() => { setActiveTab("FUEL"); setError(null); }}
-          className={`px-4 py-2 text-sm font-semibold border-b-2 transition ${
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition cursor-pointer ${
             activeTab === "FUEL" 
               ? "border-blue-600 text-blue-600" 
               : "border-transparent text-slate-500 hover:text-slate-800"
           }`}
         >
-          ⛽ Fuel Refill Logs ({fuelLogs.length})
+          ⛽ {t("acc_fuel_journal")} ({fuelLogs.length})
         </button>
         <button
           onClick={() => { setActiveTab("EXPENSE"); setError(null); }}
-          className={`px-4 py-2 text-sm font-semibold border-b-2 transition ${
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition cursor-pointer ${
             activeTab === "EXPENSE" 
               ? "border-blue-600 text-blue-600" 
               : "border-transparent text-slate-500 hover:text-slate-800"
           }`}
         >
-          💵 Operational Expenses ({expenses.length})
+          💵 {t("acc_expense_journal")} ({expenses.length})
         </button>
       </div>
 
@@ -133,12 +135,12 @@ export default function FuelExpensesView({
             {activeTab === "FUEL" ? (
               <>
                 <Fuel className="w-5 h-5 text-blue-600" />
-                <h2 className="text-base font-bold text-slate-900">Log Manual Fueling</h2>
+                <h2 className="text-base font-bold text-slate-900">{t("acc_modal_fuel")}</h2>
               </>
             ) : (
               <>
                 <DollarSign className="w-5 h-5 text-emerald-600" />
-                <h2 className="text-base font-bold text-slate-900">Record Operational Expense</h2>
+                <h2 className="text-base font-bold text-slate-900">{t("acc_modal_expense")}</h2>
               </>
             )}
           </div>
@@ -161,12 +163,12 @@ export default function FuelExpensesView({
           ) : activeTab === "FUEL" ? (
             <form onSubmit={handleFuelSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Target Fleet Vehicle</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{t("acc_label_select_veh")}</label>
                 <select
                   id="fuel-select-vehicle"
                   value={fuelVehicleId}
                   onChange={(e) => setFuelVehicleId(e.target.value)}
-                  className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                  className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition cursor-pointer"
                 >
                   {vehicles.map(v => (
                     <option key={v.id} value={v.id}>
@@ -178,7 +180,7 @@ export default function FuelExpensesView({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Refill Liters</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{t("acc_liters")}</label>
                   <input
                     id="fuel-input-liters"
                     type="number"
@@ -186,11 +188,11 @@ export default function FuelExpensesView({
                     min="1"
                     value={fuelLiters}
                     onChange={(e) => setFuelLiters(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Receipt Cost ($)</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{t("acc_amount")}</label>
                   <input
                     id="fuel-input-cost"
                     type="number"
@@ -198,7 +200,7 @@ export default function FuelExpensesView({
                     min="1"
                     value={fuelCost}
                     onChange={(e) => setFuelCost(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition"
                   />
                 </div>
               </div>
@@ -206,20 +208,20 @@ export default function FuelExpensesView({
               <button
                 id="submit-fuel-btn"
                 type="submit"
-                className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition shadow-xs cursor-pointer"
+                className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition shadow-xs smooth-hover cursor-pointer"
               >
-                Refill Journal Log
+                {t("acc_log_fuel_btn")}
               </button>
             </form>
           ) : (
             <form onSubmit={handleExpenseSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Associated Vehicle (Optional)</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{t("acc_label_select_veh")}</label>
                 <select
                   id="expense-select-vehicle"
                   value={expVehicleId}
                   onChange={(e) => setExpVehicleId(e.target.value)}
-                  className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                  className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition cursor-pointer"
                 >
                   <option value="">No specific asset</option>
                   {vehicles.map(v => (
@@ -232,12 +234,12 @@ export default function FuelExpensesView({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Expense Category</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{t("acc_category")}</label>
                   <select
                     id="expense-select-cat"
                     value={expCategory}
                     onChange={(e) => setExpCategory(e.target.value as any)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition cursor-pointer"
                   >
                     <option value="TOLL">Toll Fee</option>
                     <option value="MISC">Miscellaneous</option>
@@ -246,7 +248,7 @@ export default function FuelExpensesView({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Amount ($)</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{t("acc_label_amount")}</label>
                   <input
                     id="expense-input-amount"
                     type="number"
@@ -254,7 +256,7 @@ export default function FuelExpensesView({
                     min="1"
                     value={expAmount}
                     onChange={(e) => setExpAmount(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                    className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition"
                   />
                 </div>
               </div>
@@ -264,19 +266,19 @@ export default function FuelExpensesView({
                 <input
                   id="expense-input-desc"
                   type="text"
-                  placeholder="e.g. Clean air filters, state route bridge toll fee..."
+                  placeholder="e.g. Clean air filters, bridge toll fee..."
                   value={expDesc}
                   onChange={(e) => setExpDesc(e.target.value)}
-                  className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 transition"
+                  className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 transition"
                 />
               </div>
 
               <button
                 id="submit-expense-btn"
                 type="submit"
-                className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition shadow-xs cursor-pointer"
+                className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition shadow-xs smooth-hover cursor-pointer"
               >
-                Log Operational Expense
+                {t("acc_log_expense_btn")}
               </button>
             </form>
           )}
@@ -289,11 +291,11 @@ export default function FuelExpensesView({
               <table className="w-full border-collapse text-left">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    <th className="px-6 py-4">Vehicle</th>
-                    <th className="px-6 py-4">Liters Consumed</th>
-                    <th className="px-6 py-4">Purchase Price</th>
+                    <th className="px-6 py-4">{t("veh_details")}</th>
+                    <th className="px-6 py-4">{t("acc_liters")}</th>
+                    <th className="px-6 py-4">{t("acc_amount")}</th>
                     <th className="px-6 py-4">Trip Link</th>
-                    <th className="px-6 py-4">Logged Date</th>
+                    <th className="px-6 py-4">{t("acc_date")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm font-medium text-slate-700">
@@ -340,11 +342,11 @@ export default function FuelExpensesView({
               <table className="w-full border-collapse text-left">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    <th className="px-6 py-4">Expense Ledger</th>
-                    <th className="px-6 py-4">Category</th>
-                    <th className="px-6 py-4">Amount Invoice</th>
+                    <th className="px-6 py-4">{t("acc_expense_journal")}</th>
+                    <th className="px-6 py-4">{t("acc_category")}</th>
+                    <th className="px-6 py-4">{t("acc_amount")}</th>
                     <th className="px-6 py-4">Linked Route</th>
-                    <th className="px-6 py-4">Logged Date</th>
+                    <th className="px-6 py-4">{t("acc_date")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm font-medium text-slate-700">

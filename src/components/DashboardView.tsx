@@ -32,7 +32,7 @@ export default function DashboardView({
   activeRole,
   onNavigate
 }: DashboardViewProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Analyze alerts
   const expiredDrivers = drivers.filter(d => new Date(d.licenseExpiryDate) < new Date());
@@ -50,222 +50,202 @@ export default function DashboardView({
     },
     {
       title: t("kpi_active_vehicles"),
-      value: kpis.activeVehicles,
-      sub: `${t("veh_status_available")}: ${kpis.availableVehicles}`,
+      value: kpis.activeVehicles.toString(),
+      sub: `Available: ${kpis.availableVehicles}`,
       icon: Truck,
       color: "text-emerald-600 bg-emerald-50 border-emerald-100"
     },
     {
       title: t("kpi_vehicles_in_shop"),
-      value: kpis.vehiclesInShop,
-      sub: t("veh_status_inshop"),
+      value: kpis.vehiclesInShop.toString(),
+      sub: "Downtime active",
       icon: Wrench,
       color: "text-amber-600 bg-amber-50 border-amber-100"
     },
     {
       title: t("kpi_active_trips"),
-      value: kpis.activeTrips,
-      sub: `${t("trip_status_draft")}: ${kpis.pendingTrips}`,
+      value: kpis.activeTrips.toString(),
+      sub: `Queued: ${kpis.pendingTrips}`,
       icon: Navigation,
       color: "text-indigo-600 bg-indigo-50 border-indigo-100"
     },
     {
       title: t("kpi_drivers_on_duty"),
-      value: kpis.driversOnDuty,
-      sub: t("drv_status_available"),
-      icon: Users,
+      value: kpis.driversOnDuty.toString(),
+      sub: "Verified operators",
+      icon: UserCheck,
       color: "text-violet-600 bg-violet-50 border-violet-100"
     }
   ];
 
+  // Helper translations for alerts
+  const getAlertText = (type: "EXP_TITLE" | "EXP_DESC" | "EXP_BTN" | "SUSP_TITLE" | "SUSP_DESC" | "SUSP_BTN" | "SAFE_TITLE" | "SAFE_DESC" | "ODO_TITLE" | "ODO_DESC" | "ODO_BTN", data?: any) => {
+    const isTa = language === "ta";
+    const isEs = language === "es";
+
+    switch (type) {
+      case "EXP_TITLE":
+        return isTa ? "முக்கியமானது: ஓட்டுநர் உரிமம் காலாவதியானது" : isEs ? "Crítico: Licencia de Operador Vencida" : "Critical: Expired Operator License";
+      case "EXP_DESC":
+        return isTa 
+          ? `ஓட்டுநர் ${data.name} காலாவதியான உரிமத்தைப் பயன்படுத்துகிறார் (காலாவதி: ${data.date}). அவர் தற்காலிகமாக பணி செய்ய தடை செய்யப்பட்டுள்ளார்.` 
+          : isEs 
+            ? `El conductor ${data.name} está utilizando una licencia vencida (Vencimiento: ${data.date}). Está bloqueado del grupo de despacho.` 
+            : `Driver ${data.name} is using an expired license (Expired: ${data.date}). They are hard-blocked from dispatch pool.`;
+      case "EXP_BTN":
+        return isTa ? "உரிமத் தகவல்களைப் புதுப்பிக்கவும் →" : isEs ? "Actualizar Credenciales →" : "Update License Credentials →";
+      
+      case "SUSP_TITLE":
+        return isTa ? "எச்சரிக்கை: ஓட்டுநர் பணி இடைநீக்கம்" : isEs ? "Alerta: Operador Suspendido" : "Alert: Operator Suspended";
+      case "SUSP_DESC":
+        return isTa 
+          ? `ஓட்டுநர் ${data.name} (உரிமம்: ${data.lic}) தற்காலிகமாக பணி இடைநீக்கம் செய்யப்பட்டுள்ளார். இது பயணங்களை முடக்குகிறது.` 
+          : isEs 
+            ? `El conductor ${data.name} (Licencia: ${data.lic}) está actualmente suspendido por seguridad. Bloquea rutas activas.` 
+            : `Driver ${data.name} (License: ${data.lic}) is currently suspended by Safety. Blocks active routing.`;
+      case "SUSP_BTN":
+        return isTa ? "மீண்டும் பணியில் சேர்க்கவும் →" : isEs ? "Reincorporar Conductor →" : "Reinstate Driver →";
+
+      case "SAFE_TITLE":
+        return isTa ? "எச்சரிக்கை: ஆபத்தான பாதுகாப்பு மதிப்பீடு" : isEs ? "Advertencia: Puntaje de Seguridad de Alto Riesgo" : "Warning: High-Risk Safety Score";
+      case "SAFE_DESC":
+        return isTa 
+          ? `ஓட்டுநர் ${data.name} பாதுகாப்பு மதிப்பீடு ${data.score}/100 பெற்றுள்ளார். இவருக்கு இணக்க ஆலோசனை தேவை.` 
+          : isEs 
+            ? `El conductor ${data.name} tiene un índice de seguridad de ${data.score}/100. Requiere asesoría de cumplimiento.` 
+            : `Driver ${data.name} has a safety rating of ${data.score}/100. Requires compliance counseling.`;
+
+      case "ODO_TITLE":
+        return isTa ? "அறிவுரை: வாகன பராமரிப்பு சோதனை தேவை" : isEs ? "Asesoría: Odómetro de Control de Mantenimiento" : "Advisory: Maintenance Checkup Odometer";
+      case "ODO_DESC":
+        return isTa 
+          ? `சொத்து ${data.name} (${data.reg}) ${data.odo} கிமீ கடந்துள்ளது. ஆய்வு செய்ய பரிந்துரைக்கப்படுகிறது.` 
+          : isEs 
+            ? `El vehículo ${data.name} (${data.reg}) ha cruzado los ${data.odo} km. Se aconseja inspección.` 
+            : `Fleet vehicle ${data.name} (${data.reg}) has crossed ${data.odo} km. Advise inspection.`;
+      case "ODO_BTN":
+        return isTa ? "வாகனத்தை பராமரிப்புக்கு அனுப்பவும் →" : isEs ? "Enviar a Taller Ahora →" : "Dispatch to Shop Now →";
+      
+      default:
+        return "";
+    }
+  };
+
+  // Helper translations for permissions
+  const getPermissionLabel = (key: string) => {
+    const isTa = language === "ta";
+    const isEs = language === "es";
+
+    const mapping: Record<string, {en: string, ta: string, es: string}> = {
+      "Enroll Assets": { en: "Enroll Assets", ta: "சொத்துக்களைப் பதிவு செய்தல்", es: "Registrar Activos" },
+      "Odometer Completion": { en: "Odometer Completion", ta: "ஓடோமீட்டர் சரிபார்ப்பு", es: "Registro de Odómetro" },
+      "Read Registry": { en: "Read Registry", ta: "பதிவேட்டைப் படித்தல்", es: "Leer Registro" },
+      "Plan Routes": { en: "Plan Routes", ta: "சரக்கு வழிகள் திட்டமிடல்", es: "Planificar Rutas" },
+      "Suspend Operators": { en: "Suspend Operators", ta: "பணி இடைநீக்கம்", es: "Suspender Operadores" },
+      "Edit Safety Rating": { en: "Edit Safety Rating", ta: "பாதுகாப்பு திருத்தம்", es: "Editar Calificación" },
+      "License Audits": { en: "License Audits", ta: "உரிமத் தணிக்கை", es: "Auditorías de Licencia" },
+      "Cost & Fuel Audits": { en: "Cost & Fuel Audits", ta: "செலவு & எரிபொருள் தணிக்கை", es: "Auditorías de Costo" },
+      "ROI Reporting": { en: "ROI Reporting", ta: "வருவாய் அறிக்கை", es: "Informes de ROI" },
+      "Expense Logs": { en: "Expense Logs", ta: "செலவுப் பதிவுகள்", es: "Registro de Gastos" }
+    };
+
+    const record = mapping[key];
+    if (!record) return key;
+    return isTa ? record.ta : isEs ? record.es : record.en;
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Welcome Banner */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 custom-glow">
+    <div className="space-y-6 animate-fade-in-up">
+      {/* Header Info */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t("db_overview")}</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            {t("db_overview_sub")}
-          </p>
+          <p className="text-sm text-slate-500 mt-1">{t("db_overview_sub")}</p>
         </div>
-        <div className="flex items-center gap-2 text-xs font-mono text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
-          <Calendar className="w-4 h-4 text-slate-400" />
-          <span>UTC: {new Date().toISOString().split("T")[0]}</span>
+        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-100 shadow-xs text-xs font-semibold text-slate-500 shrink-0">
+          <Calendar className="w-3.5 h-3.5 text-blue-600" />
+          <span>UTC: 2026-07-12</span>
         </div>
       </div>
 
-      {/* KPI Cards Grid - Frosted Glass panel design */}
+      {/* Grid of Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {cards.map((card, i) => {
           const Icon = card.icon;
           return (
-            <div key={i} className="glass-panel rounded-xl p-5 flex flex-col justify-between transition-all hover:border-slate-300 hover:-translate-y-0.5 shadow-xs smooth-hover">
+            <div key={i} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition custom-glow glass-panel smooth-hover">
               <div className="flex justify-between items-start">
-                <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">{card.title}</span>
-                <div className={`p-2 rounded-lg border ${card.color}`}>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{card.title}</span>
+                <div className={`p-2 rounded-xl border shrink-0 ${card.color}`}>
                   <Icon className="w-4 h-4" />
                 </div>
               </div>
               <div className="mt-4">
-                <span className="text-3xl font-extrabold tracking-tight text-slate-900">{card.value}</span>
-                <p className="text-xs text-slate-400 mt-1 font-semibold">{card.sub}</p>
+                <h3 className="text-2xl font-bold text-slate-900 font-mono tracking-tight">{card.value}</h3>
+                <p className="text-xs text-slate-400 font-semibold mt-1">{card.sub}</p>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Main Content Layout Grid */}
+      {/* Double Column Info section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Quick Actions Panel */}
-        <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-xs">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Quick Workflows</h2>
-          <div className="space-y-2.5">
-            {activeRole === Role.FLEET_MANAGER && (
-              <>
-                <button
-                  id="qa-new-vehicle"
-                  onClick={() => onNavigate("vehicles")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-blue-100 hover:bg-blue-50/40 text-left text-sm font-semibold text-slate-700 hover:text-blue-700 transition smooth-hover cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <Truck className="w-4 h-4 text-blue-500" /> {t("veh_enroll_btn")}
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">→</span>
-                </button>
-                <button
-                  id="qa-new-maint"
-                  onClick={() => onNavigate("maintenance")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-amber-100 hover:bg-amber-50/40 text-left text-sm font-semibold text-slate-700 hover:text-amber-700 transition smooth-hover cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <Wrench className="w-4 h-4 text-amber-500" /> {t("maint_add_btn")}
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">→</span>
-                </button>
-              </>
-            )}
+        {/* Active Role and Security permissions */}
+        <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 mb-1">{t("active_role")}</h2>
+            <p className="text-xs text-slate-400 font-semibold mb-4">Cryptographic token role permissions mapping</p>
 
-            {activeRole === Role.DISPATCHER && (
-              <>
-                <button
-                  id="qa-new-trip"
-                  onClick={() => onNavigate("trips")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-indigo-100 bg-indigo-50/40 hover:bg-indigo-50 text-left text-sm font-semibold text-indigo-800 transition smooth-hover cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <Navigation className="w-4 h-4 text-indigo-600" /> {t("trip_add_btn")}
-                  </span>
-                  <span className="text-xs text-indigo-400 font-mono">→</span>
-                </button>
-                <button
-                  id="qa-view-active-trips"
-                  onClick={() => onNavigate("trips")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-left text-sm font-semibold text-slate-700 transition smooth-hover cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-slate-500" /> {t("tab_trips")}
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">→</span>
-                </button>
-              </>
-            )}
+            <div className="space-y-4">
+              <div>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Security Context Identity</span>
+                <span className="font-bold text-blue-600 text-sm mt-1 block">
+                  {activeRole === Role.FLEET_MANAGER && t("role_fleet_manager")}
+                  {activeRole === Role.DISPATCHER && t("role_dispatcher")}
+                  {activeRole === Role.SAFETY_OFFICER && t("role_safety_officer")}
+                  {activeRole === Role.FINANCIAL_ANALYST && t("role_financial_analyst")}
+                </span>
+              </div>
 
-            {activeRole === Role.SAFETY_OFFICER && (
-              <>
-                <button
-                  id="qa-audit-drivers"
-                  onClick={() => onNavigate("drivers")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-violet-100 hover:bg-violet-50/40 text-left text-sm font-semibold text-slate-700 hover:text-violet-700 transition smooth-hover cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-violet-500" /> {t("tab_drivers")}
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">→</span>
-                </button>
-                <button
-                  id="qa-manage-credentials"
-                  onClick={() => onNavigate("drivers")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-rose-100 hover:bg-rose-50/40 text-left text-sm font-semibold text-slate-700 hover:text-rose-700 transition smooth-hover cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <ShieldAlert className="w-4 h-4 text-rose-500" /> {t("drv_license_expiry")}
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">→</span>
-                </button>
-              </>
-            )}
-
-            {activeRole === Role.FINANCIAL_ANALYST && (
-              <>
-                <button
-                  id="qa-view-reports"
-                  onClick={() => onNavigate("reports")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-violet-100 bg-violet-50/40 hover:bg-violet-50 text-left text-sm font-semibold text-violet-800 transition smooth-hover cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-violet-600" /> {t("tab_reports")}
-                  </span>
-                  <span className="text-xs text-violet-400 font-mono">→</span>
-                </button>
-                <button
-                  id="qa-new-expense"
-                  onClick={() => onNavigate("fuel-expenses")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-emerald-100 hover:bg-emerald-50/40 text-left text-sm font-semibold text-slate-700 hover:text-emerald-700 transition smooth-hover cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-emerald-500" /> {t("acc_log_expense_btn")}
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">→</span>
-                </button>
-              </>
-            )}
-
-            {/* General Actions available for all */}
-            <button
-              id="qa-view-all-trips"
-              onClick={() => onNavigate("trips")}
-              className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-left text-sm font-semibold text-slate-700 transition smooth-hover cursor-pointer"
-            >
-              <span className="flex items-center gap-2">
-                <Navigation className="w-4 h-4 text-slate-400" /> {t("tab_trips")}
-              </span>
-              <span className="text-xs text-slate-400 font-mono">→</span>
-            </button>
+              <div>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Granted Write Enforcements</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {activeRole === Role.FLEET_MANAGER && (
+                    <>
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">{getPermissionLabel("Enroll Assets")}</span>
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">{getPermissionLabel("Odometer Completion")}</span>
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">{getPermissionLabel("Read Registry")}</span>
+                    </>
+                  )}
+                  {activeRole === Role.DISPATCHER && (
+                    <>
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">{getPermissionLabel("Plan Routes")}</span>
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">{getPermissionLabel("Odometer Completion")}</span>
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">{getPermissionLabel("Read Registry")}</span>
+                    </>
+                  )}
+                  {activeRole === Role.SAFETY_OFFICER && (
+                    <>
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100">{getPermissionLabel("Suspend Operators")}</span>
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100">{getPermissionLabel("Edit Safety Rating")}</span>
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100">{getPermissionLabel("License Audits")}</span>
+                    </>
+                  )}
+                  {activeRole === Role.FINANCIAL_ANALYST && (
+                    <>
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">{getPermissionLabel("Cost & Fuel Audits")}</span>
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">{getPermissionLabel("ROI Reporting")}</span>
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">{getPermissionLabel("Expense Logs")}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-6 border-t border-slate-100 pt-4">
-            <h3 className="text-xs font-bold text-slate-400 tracking-wider uppercase mb-2">My Permissions</h3>
-            <div className="flex flex-wrap gap-1.5">
-              {activeRole === Role.FLEET_MANAGER && (
-                <>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">Vehicle CRUD</span>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">Maintenance Write</span>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">Driver Write</span>
-                </>
-              )}
-              {activeRole === Role.DISPATCHER && (
-                <>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">Trip Dispatch</span>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">Odometer Completion</span>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">Read Registry</span>
-                </>
-              )}
-              {activeRole === Role.SAFETY_OFFICER && (
-                <>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100">Suspend Operators</span>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100">Edit Safety Rating</span>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100">License Audits</span>
-                </>
-              )}
-              {activeRole === Role.FINANCIAL_ANALYST && (
-                <>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">Cost & Fuel Audits</span>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">ROI Reporting</span>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">Expense Logs</span>
-                </>
-              )}
-            </div>
+          <div className="border-t border-slate-100 pt-4 mt-6 text-xs text-slate-400 leading-relaxed font-medium">
+            Permissions are enforced at the network protocol layer on both the client dashboard and database transactions.
           </div>
         </div>
 
@@ -284,12 +264,12 @@ export default function DashboardView({
                 <div key={`exp-${idx}`} className="flex gap-3 p-3 bg-rose-50/50 border border-rose-100 rounded-lg">
                   <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-800">Critical: Expired Operator License</h3>
+                    <h3 className="text-sm font-semibold text-slate-800">{getAlertText("EXP_TITLE")}</h3>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Driver <span className="font-semibold text-slate-800">{d.name}</span> is using an expired license (Expired: {d.licenseExpiryDate}). They are hard-blocked from dispatch pool.
+                      {getAlertText("EXP_DESC", { name: d.name, date: d.licenseExpiryDate })}
                     </p>
                     <button onClick={() => onNavigate("drivers")} className="text-xs font-semibold text-rose-700 hover:underline mt-1.5 inline-block cursor-pointer">
-                      Update License Credentials →
+                      {getAlertText("EXP_BTN")}
                     </button>
                   </div>
                 </div>
@@ -299,13 +279,13 @@ export default function DashboardView({
                 <div key={`susp-${idx}`} className="flex gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
                   <ShieldAlert className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-800">Alert: Operator Suspended</h3>
+                    <h3 className="text-sm font-semibold text-slate-800">{getAlertText("SUSP_TITLE")}</h3>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Driver <span className="font-semibold text-slate-800">{d.name}</span> (License: {d.licenseNumber}) is currently suspended by Safety. Blocks active routing.
+                      {getAlertText("SUSP_DESC", { name: d.name, lic: d.licenseNumber })}
                     </p>
                     {activeRole === Role.SAFETY_OFFICER && (
                       <button onClick={() => onNavigate("drivers")} className="text-xs font-semibold text-slate-600 hover:underline mt-1.5 inline-block cursor-pointer">
-                        Reinstate Driver →
+                        {getAlertText("SUSP_BTN")}
                       </button>
                     )}
                   </div>
@@ -316,9 +296,9 @@ export default function DashboardView({
                 <div key={`saf-${idx}`} className="flex gap-3 p-3 bg-amber-50/50 border border-amber-100 rounded-lg">
                   <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-800">Warning: High-Risk Safety Score</h3>
+                    <h3 className="text-sm font-semibold text-slate-800">{getAlertText("SAFE_TITLE")}</h3>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Driver <span className="font-semibold text-slate-800">{d.name}</span> has a safety rating of <span className="font-semibold text-amber-700">{d.safetyScore}/100</span>. Requires compliance counseling.
+                      {getAlertText("SAFE_DESC", { name: d.name, score: d.safetyScore })}
                     </p>
                   </div>
                 </div>
@@ -328,13 +308,13 @@ export default function DashboardView({
                 <div key={`odo-${idx}`} className="flex gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-lg">
                   <Truck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-800">Advisory: Maintenance Checkup Odometer</h3>
+                    <h3 className="text-sm font-semibold text-slate-800">{getAlertText("ODO_TITLE")}</h3>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Fleet vehicle <span className="font-semibold text-slate-800">{v.name}</span> ({v.registrationNumber}) has crossed <span className="font-semibold text-slate-800">{v.odometerKm.toLocaleString()} km</span>. Advise inspection.
+                      {getAlertText("ODO_DESC", { name: v.name, reg: v.registrationNumber, odo: v.odometerKm.toLocaleString() })}
                     </p>
                     {activeRole === Role.FLEET_MANAGER && (
                       <button onClick={() => onNavigate("maintenance")} className="text-xs font-semibold text-blue-700 hover:underline mt-1.5 inline-block cursor-pointer">
-                        Dispatch to Shop Now →
+                        {getAlertText("ODO_BTN")}
                       </button>
                     )}
                   </div>

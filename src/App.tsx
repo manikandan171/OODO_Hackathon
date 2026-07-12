@@ -593,7 +593,7 @@ export default function App() {
                   }`}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
-                  <span>{t("tab_" + item.id)}</span>
+                  <span>{t("tab_" + item.id.replace("-", "_"))}</span>
                 </button>
               );
             })}

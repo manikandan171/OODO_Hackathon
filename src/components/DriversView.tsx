@@ -32,6 +32,7 @@ export default function DriversView({
 
   // Add / Edit Modal state
   const [showModal, setShowModal] = useState(false);
+  const [activeLicenseDriver, setActiveLicenseDriver] = useState<Driver | null>(null);
   const [modalMode, setModalMode] = useState<"ADD" | "EDIT">("ADD");
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -269,6 +270,12 @@ export default function DriversView({
                     <div className="flex flex-col gap-1">
                       <span className="font-mono text-slate-700 font-semibold">{d.licenseNumber}</span>
                       {getLicenseBadge(d.licenseExpiryDate)}
+                      <button
+                        onClick={() => setActiveLicenseDriver(d)}
+                        className="text-xs text-blue-600 hover:text-blue-800 hover:underline mt-1 font-semibold flex items-center gap-1 cursor-pointer w-fit"
+                      >
+                        🪪 {t("drv_view_license")}
+                      </button>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -460,6 +467,88 @@ export default function DriversView({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* View License Modal */}
+      {activeLicenseDriver && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-3xl max-w-md w-full border border-indigo-200 shadow-2xl overflow-hidden p-6 relative animate-in zoom-in duration-200">
+            
+            {/* Header: Republic of India Logo & Text */}
+            <div className="flex justify-between items-start border-b border-indigo-200 pb-3 mb-4">
+              <div className="flex gap-2.5 items-center">
+                <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white text-[10px] font-bold shadow-sm font-serif">🇮🇳</div>
+                <div>
+                  <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-wide leading-tight">Union of India</h2>
+                  <h3 className="text-[9px] font-bold text-slate-500 uppercase tracking-wider leading-tight">Ministry of Road Transport & Highways</h3>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-mono font-bold bg-amber-500/20 text-amber-800 border border-amber-500/35 px-2 py-0.5 rounded-sm block">DRIVING LICENSE</span>
+                <span className="text-[8px] text-slate-400 font-bold tracking-wider mt-0.5 block">IND • ORIGINAL</span>
+              </div>
+            </div>
+
+            {/* Main License Content details */}
+            <div className="flex gap-4">
+              {/* Profile Photo Mock */}
+              <div className="w-24 h-28 rounded-lg bg-slate-200 border border-slate-300 shadow-inner flex flex-col items-center justify-center text-slate-400 shrink-0 relative overflow-hidden bg-gradient-to-b from-slate-100 to-slate-200">
+                <User className="w-10 h-10 mt-2" />
+                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest bg-slate-300 w-full py-1 mt-auto text-center font-mono">PHOTO</span>
+                {/* Government hologram seal overlay mock */}
+                <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-gradient-to-tr from-yellow-400 to-teal-400 opacity-60 mix-blend-color-dodge animate-pulse"></div>
+              </div>
+
+              {/* Data Fields */}
+              <div className="flex-1 space-y-2 text-xs text-slate-700 leading-tight">
+                <div>
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide block">Lic No:</span>
+                  <span className="font-bold text-slate-800 font-mono text-sm tracking-wide">{activeLicenseDriver.licenseNumber}</span>
+                </div>
+                <div>
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide block">Name:</span>
+                  <span className="font-bold text-slate-800 uppercase font-sans">{activeLicenseDriver.name}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide block">Class:</span>
+                    <span className="font-bold text-slate-800 font-mono">{activeLicenseDriver.licenseCategory}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide block">Expiry:</span>
+                    <span className="font-bold text-slate-800 font-mono">{activeLicenseDriver.licenseExpiryDate}</span>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide block">Contact:</span>
+                  <span className="font-semibold text-slate-700 font-mono">{activeLicenseDriver.contactNumber}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer and Mock Signatures */}
+            <div className="border-t border-indigo-200 pt-3 mt-4 flex justify-between items-center text-[9px] text-slate-500">
+              <div>
+                <span className="block font-bold text-slate-400 text-[7px] uppercase tracking-wider">Authority:</span>
+                <span className="font-semibold text-slate-600 font-serif">State Transport Dept.</span>
+              </div>
+              <div className="text-right">
+                <span className="block font-bold text-slate-400 text-[7px] uppercase tracking-wider">Holder Sign:</span>
+                <span className="font-mono italic font-bold text-indigo-700 text-[10px] tracking-wide">{activeLicenseDriver.name.split(" ")[0]}</span>
+              </div>
+            </div>
+
+            {/* Hologram seal effect overlay on bottom left */}
+            <div className="absolute bottom-6 left-6 w-8 h-8 rounded-full border border-indigo-300 bg-gradient-to-r from-orange-400/20 via-white/10 to-emerald-400/20 shadow-xs pointer-events-none flex items-center justify-center text-[5px] text-indigo-500 font-bold uppercase tracking-widest font-mono">IND</div>
+
+            {/* Close Button overlay */}
+            <button 
+              onClick={() => setActiveLicenseDriver(null)}
+              className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-sm font-bold bg-white/60 hover:bg-white w-6 h-6 rounded-full flex items-center justify-center transition border border-indigo-200/50 cursor-pointer"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}
