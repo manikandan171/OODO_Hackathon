@@ -231,6 +231,64 @@ export default function DriversView({
         )}
       </div>
 
+      {/* Premium Driver Safety Leaderboard */}
+      <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-xs animate-fade-in-up">
+        <h2 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <Award className="w-5 h-5 text-amber-500" />
+          Driver Safety Leaderboard & Gamified Podiums
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          {/* Extract top 3 drivers sorted by score */}
+          {drivers
+            .slice()
+            .sort((a, b) => b.safetyScore - a.safetyScore)
+            .slice(0, 3)
+            .map((drv, idx) => {
+              const rankColor = idx === 0 ? "bg-amber-500 text-white" : idx === 1 ? "bg-slate-300 text-slate-800" : "bg-orange-400 text-white";
+              const rankLabel = idx === 0 ? "🥇 Gold" : idx === 1 ? "🥈 Silver" : "🥉 Bronze";
+              return (
+                <div key={drv.id} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-between hover:border-slate-300 transition smooth-hover">
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider block text-slate-400">{rankLabel} Operator</span>
+                    <span className="font-bold text-slate-800 text-sm block mt-0.5">{drv.name}</span>
+                    <span className="text-xs text-slate-500 font-medium">Score: {drv.safetyScore}/100</span>
+                  </div>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${rankColor}`}>
+                    #{idx + 1}
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+
+        {/* Dynamic counseling triggers for low safety scores */}
+        {drivers.some(d => d.safetyScore < 75) && (
+          <div className="border-t border-slate-100 pt-4 mt-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-rose-500 mb-2 flex items-center gap-1.5 animate-pulse">
+              <AlertTriangle className="w-3.5 h-3.5" /> Operators Requiring Safety Counseling (&lt; 75 score)
+            </h3>
+            <div className="space-y-2">
+              {drivers
+                .filter(d => d.safetyScore < 75)
+                .map(d => (
+                  <div key={d.id} className="flex justify-between items-center bg-rose-50/50 border border-rose-100 p-2.5 rounded-lg text-xs font-semibold animate-fade-in-up">
+                    <span className="text-slate-800">
+                      {d.name} (License: <span className="font-mono text-slate-500">{d.licenseNumber}</span>) • Safety Rating: <span className="text-rose-600 font-bold font-mono">{d.safetyScore}%</span>
+                    </span>
+                    <button 
+                      onClick={() => alert(`Counseling invitation dispatched to ${d.name}. Compliance training session scheduled.`)}
+                      className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-md text-[10px] font-bold shadow-xs cursor-pointer transition"
+                    >
+                      Schedule Counseling
+                    </button>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Filters Card */}
       <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Search */}

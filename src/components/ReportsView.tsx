@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Download, FileText, BarChart3, HelpCircle, DollarSign, Fuel, TrendingUp, Navigation, Scale } from "lucide-react";
+import { Download, FileText, BarChart3, HelpCircle, DollarSign, Fuel, TrendingUp, Navigation, Scale, Leaf } from "lucide-react";
 import { Role, VehicleReport } from "../types";
 import { useLanguage } from "../LanguageContext";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -14,7 +14,7 @@ export default function ReportsView({
   activeRole
 }: ReportsViewProps) {
   const { t } = useLanguage();
-  const [reportType, setReportType] = useState<"EFFICIENCY" | "COST" | "ROI">("EFFICIENCY");
+  const [reportType, setReportType] = useState<"EFFICIENCY" | "COST" | "ROI" | "SUSTAINABILITY">("EFFICIENCY");
 
   // Export CSV functionality
   const handleExportCSV = () => {
@@ -96,6 +96,23 @@ export default function ReportsView({
             <p className="text-xs text-slate-400 mt-1 font-medium leading-relaxed">Asset valuation payback score based on routes completed vs expenses.</p>
           </div>
         </button>
+
+        <button
+          onClick={() => setReportType("SUSTAINABILITY")}
+          className={`text-left p-5 rounded-2xl border transition-all smooth-hover cursor-pointer flex items-start gap-4 ${
+            reportType === "SUSTAINABILITY" 
+              ? "bg-blue-50/20 border-blue-200 text-blue-900 custom-glow" 
+              : "bg-white border-slate-100 text-slate-700"
+          }`}
+        >
+          <div className={`p-2.5 rounded-xl border shrink-0 ${reportType === "SUSTAINABILITY" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-slate-50 border-slate-200 text-slate-400"}`}>
+            <Leaf className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm">Sustainability Index</h3>
+            <p className="text-xs text-slate-400 mt-1 font-medium leading-relaxed">Carbon footprint emissions tracking computed from diesel logs.</p>
+          </div>
+        </button>
       </div>
 
       {/* Highly creative visual analytics bar chart representation using Recharts */}
@@ -106,7 +123,9 @@ export default function ReportsView({
             ? "Fuel Efficiency Index (km/L)" 
             : reportType === "COST" 
               ? "Total Operational Cost ($)" 
-              : "Capital Payback ROI (%)"}
+              : reportType === "ROI"
+                ? "Capital Payback ROI (%)"
+                : "Carbon Footprint (kg CO2)"}
         </h2>
 
         <div className="h-80 w-full font-mono text-xs">
@@ -114,7 +133,13 @@ export default function ReportsView({
             <BarChart
               data={analyticsReport.map(r => ({
                 name: r.registrationNumber,
-                value: reportType === "EFFICIENCY" ? r.fuelEfficiencyKmPerL : reportType === "COST" ? r.operationalCost : r.roiPercent,
+                value: reportType === "EFFICIENCY" 
+                  ? r.fuelEfficiencyKmPerL 
+                  : reportType === "COST" 
+                    ? r.operationalCost 
+                    : reportType === "ROI" 
+                      ? r.roiPercent 
+                      : Number((r.totalFuelLiters * 2.68).toFixed(1)),
                 model: r.name
               }))}
               margin={{ top: 10, right: 30, left: 10, bottom: 20 }}
@@ -130,13 +155,33 @@ export default function ReportsView({
                   boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.05)"
                 }}
                 formatter={(value: any) => [
-                  reportType === "EFFICIENCY" ? `${value} km/L` : reportType === "COST" ? `$${value}` : `${value}%`,
-                  reportType === "EFFICIENCY" ? "Efficiency" : reportType === "COST" ? "Cost" : "ROI"
+                  reportType === "EFFICIENCY" 
+                    ? `${value} km/L` 
+                    : reportType === "COST" 
+                      ? `$${value}` 
+                      : reportType === "ROI" 
+                        ? `${value}%` 
+                        : `${value} kg CO2`,
+                  reportType === "EFFICIENCY" 
+                    ? "Efficiency" 
+                    : reportType === "COST" 
+                      ? "Cost" 
+                      : reportType === "ROI" 
+                        ? "ROI" 
+                        : "CO2 Footprint"
                 ]}
               />
               <Bar 
                 dataKey="value" 
-                fill={reportType === "EFFICIENCY" ? "#3b82f6" : reportType === "COST" ? "#f59e0b" : "#8b5cf6"} 
+                fill={
+                  reportType === "EFFICIENCY" 
+                    ? "#3b82f6" 
+                    : reportType === "COST" 
+                      ? "#f59e0b" 
+                      : reportType === "ROI" 
+                        ? "#8b5cf6" 
+                        : "#10b981"
+                } 
                 radius={[8, 8, 0, 0]} 
                 barSize={45}
               />
@@ -244,6 +289,48 @@ export default function ReportsView({
                     </td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          )}
+
+          {reportType === "SUSTAINABILITY" && (
+            <table className="w-full border-collapse text-left animate-fade-in-up">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="px-6 py-4">{t("veh_details")}</th>
+                  <th className="px-6 py-4">Fuel Refills (L)</th>
+                  <th className="px-6 py-4">Carbon Footprint (kg CO2)</th>
+                  <th className="px-6 py-4">Efficiency Indicator</th>
+                  <th className="px-6 py-4">Sustainability Badging</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                {analyticsReport.map((r) => {
+                  const co2Kg = Number((r.totalFuelLiters * 2.68).toFixed(1));
+                  const isEcoFriendly = r.fuelEfficiencyKmPerL > 8.0 || r.totalFuelLiters === 0;
+                  return (
+                    <tr key={r.vehicleId} className="hover:bg-slate-50/50 transition">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="font-bold text-slate-900 block">{r.name}</span>
+                        <span className="text-xs font-mono font-medium text-slate-400 block mt-0.5">{r.registrationNumber} • {r.type}</span>
+                      </td>
+                      <td className="px-6 py-4 font-mono whitespace-nowrap">{r.totalFuelLiters.toLocaleString()} L</td>
+                      <td className="px-6 py-4 font-mono text-emerald-600 whitespace-nowrap">{co2Kg.toLocaleString()} kg</td>
+                      <td className="px-6 py-4 font-mono whitespace-nowrap">{r.fuelEfficiencyKmPerL} km/L</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {isEcoFriendly ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            🍃 Green Certified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-50 text-slate-600 border border-slate-100">
+                            🌿 Eco-Efficient
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
