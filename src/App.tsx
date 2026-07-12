@@ -19,6 +19,7 @@ import {
   RefreshCw,
   Search
 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { 
   Role, 
   Vehicle, 
@@ -73,9 +74,9 @@ export default function App() {
   const [analyticsReport, setAnalyticsReport] = useState<VehicleReport[]>([]);
 
   // Fetch all core resources
-  const loadData = async () => {
+  const loadData = async (isSilent = false) => {
     if (!token) return;
-    setIsLoading(true);
+    if (!isSilent) setIsLoading(true);
     try {
       const headers = { "Authorization": `Bearer ${token}` };
 
@@ -102,13 +103,18 @@ export default function App() {
     } catch (err) {
       console.error("Failed to synchronize with TransitOps server:", err);
     } finally {
-      setIsLoading(false);
+      if (!isSilent) setIsLoading(false);
     }
   };
 
   // Synchronize database upon role shifts or action completions
   useEffect(() => {
     loadData();
+    
+    // Polling interval for realtime data
+    const intervalId = setInterval(() => {
+      loadData(true); // silent fetch
+    }, 5000);
     
     // Set default tab based on role when they log in
     if (user) {
@@ -120,7 +126,9 @@ export default function App() {
         setActiveTab("dashboard");
       }
     }
-  }, [user]);
+
+    return () => clearInterval(intervalId);
+  }, [user, token]);
 
   // --- API INTERACTION METHODS ---
 
@@ -349,9 +357,11 @@ export default function App() {
             const isSelected = activeTab === item.id;
             
             return (
-              <button
+              <motion.button
                 key={item.id}
                 id={`nav-${item.id}`}
+                whileHover={{ x: 4, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   setActiveTab(item.id);
                   setSearchQuery("");
@@ -359,13 +369,13 @@ export default function App() {
                 }}
                 className={`w-full flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm transition cursor-pointer ${
                   isSelected
-                    ? "border border-amber-600/50 text-amber-500 shadow-sm"
+                    ? "border border-amber-600/50 text-amber-500 shadow-sm bg-amber-900/10"
                     : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                 }`}
               >
                 {/* No icon in mockup sidebar, keeping text clean */}
                 <span className={isSelected ? "font-semibold" : "font-medium"}>{item.label}</span>
-              </button>
+              </motion.button>
             );
           })}
         </nav>
@@ -437,86 +447,96 @@ export default function App() {
               <p className="text-sm">Loading Data...</p>
             </div>
           ) : (
-            <div className="max-w-7xl mx-auto animate-in fade-in duration-300">
-              {(activeTab === "dashboard" || (!allNavigationItems.some(i => i.id === activeTab))) && (
-                <DashboardView
-                  kpis={kpis}
-                  vehicles={vehicles}
-                  drivers={drivers}
-                  trips={trips}
-                  activeRole={user.role}
-                  onNavigate={setActiveTab}
-                />
-              )}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="max-w-7xl mx-auto"
+              >
+                {(activeTab === "dashboard" || (!allNavigationItems.some(i => i.id === activeTab))) && (
+                  <DashboardView
+                    kpis={kpis}
+                    vehicles={vehicles}
+                    drivers={drivers}
+                    trips={trips}
+                    activeRole={user.role}
+                    onNavigate={setActiveTab}
+                  />
+                )}
 
-              {allNavigationItems.some(i => i.id === activeTab) && !navigationItems.some(i => i.id === activeTab) && activeTab !== "dashboard" && (
-                <AccessDenied />
-              )}
+                {allNavigationItems.some(i => i.id === activeTab) && !navigationItems.some(i => i.id === activeTab) && activeTab !== "dashboard" && (
+                  <AccessDenied />
+                )}
 
-              {activeTab === "vehicles" && (
-                <VehiclesView
-                  vehicles={vehicles}
-                  activeRole={user.role}
-                  onAddVehicle={handleAddVehicle}
-                  onUpdateVehicle={handleUpdateVehicle}
-                  onRetireVehicle={handleRetireVehicle}
-                  globalSearchQuery={globalSearchQuery}
-                />
-              )}
+                {activeTab === "vehicles" && (
+                  <VehiclesView
+                    vehicles={vehicles}
+                    activeRole={user.role}
+                    onAddVehicle={handleAddVehicle}
+                    onUpdateVehicle={handleUpdateVehicle}
+                    onRetireVehicle={handleRetireVehicle}
+                    globalSearchQuery={globalSearchQuery}
+                  />
+                )}
 
-              {activeTab === "drivers" && (
-                <DriversView
-                  drivers={drivers}
-                  activeRole={user.role}
-                  onAddDriver={handleAddDriver}
-                  onUpdateDriver={handleUpdateDriver}
-                  onSuspendDriver={handleSuspendDriver}
-                  globalSearchQuery={globalSearchQuery}
-                />
-              )}
+                {activeTab === "drivers" && (
+                  <DriversView
+                    drivers={drivers}
+                    activeRole={user.role}
+                    onAddDriver={handleAddDriver}
+                    onUpdateDriver={handleUpdateDriver}
+                    onSuspendDriver={handleSuspendDriver}
+                    globalSearchQuery={globalSearchQuery}
+                  />
+                )}
 
-              {activeTab === "trips" && (
-                <TripsView
-                  trips={trips}
-                  vehicles={vehicles}
-                  drivers={drivers}
-                  activeRole={user.role}
-                  onAddTrip={handleAddTrip}
-                  onDispatchTrip={handleDispatchTrip}
-                  onCompleteTrip={handleCompleteTrip}
-                  onCancelTrip={handleCancelTrip}
-                  globalSearchQuery={globalSearchQuery}
-                />
-              )}
+                {activeTab === "trips" && (
+                  <TripsView
+                    trips={trips}
+                    vehicles={vehicles}
+                    drivers={drivers}
+                    activeRole={user.role}
+                    onAddTrip={handleAddTrip}
+                    onDispatchTrip={handleDispatchTrip}
+                    onCompleteTrip={handleCompleteTrip}
+                    onCancelTrip={handleCancelTrip}
+                    globalSearchQuery={globalSearchQuery}
+                  />
+                )}
 
-              {activeTab === "maintenance" && (
-                <MaintenanceView
-                  maintenanceLogs={maintenanceLogs}
-                  vehicles={vehicles}
-                  activeRole={user.role}
-                  onOpenMaintenance={handleOpenMaintenance}
-                  onCloseMaintenance={handleCloseMaintenance}
-                />
-              )}
+                {activeTab === "maintenance" && (
+                  <MaintenanceView
+                    maintenanceLogs={maintenanceLogs}
+                    vehicles={vehicles}
+                    activeRole={user.role}
+                    onOpenMaintenance={handleOpenMaintenance}
+                    onCloseMaintenance={handleCloseMaintenance}
+                  />
+                )}
 
-              {activeTab === "fuel-expenses" && (
-                <FuelExpensesView
-                  fuelLogs={fuelLogs}
-                  expenses={expenses}
-                  vehicles={vehicles}
-                  activeRole={user.role}
-                  onAddFuelLog={handleAddFuelLog}
-                  onAddExpense={handleAddExpense}
-                />
-              )}
+                {activeTab === "fuel-expenses" && (
+                  <FuelExpensesView
+                    fuelLogs={fuelLogs}
+                    expenses={expenses}
+                    vehicles={vehicles}
+                    activeRole={user.role}
+                    onAddFuelLog={handleAddFuelLog}
+                    onAddExpense={handleAddExpense}
+                  />
+                )}
 
-              {activeTab === "reports" && (
-                <ReportsView
-                  analyticsReport={analyticsReport}
-                  activeRole={user.role}
-                />
-              )}
-            </div>
+                {activeTab === "reports" && (
+                  <ReportsView
+                    analyticsReport={analyticsReport}
+                    kpis={kpis}
+                    activeRole={user.role}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
           )}
         </main>
       </div>

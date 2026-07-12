@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion } from "motion/react";
 import { Role, DashboardKPIs, Vehicle, Driver, Trip, TripStatus, VehicleStatus } from "../types";
 
 interface DashboardViewProps {
@@ -116,10 +117,17 @@ export default function DashboardView({
       {/* KPI Cards */}
       <div className="flex flex-wrap gap-4">
         {cards.map((card, idx) => (
-          <div key={idx} className={`bg-[#1A1A1A] border border-slate-800 border-l-4 rounded-sm p-4 w-40 h-28 flex flex-col justify-between ${card.color}`}>
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.1 }}
+            whileHover={{ scale: 1.05, y: -5 }}
+            className={`bg-[#1A1A1A] border border-slate-800 border-l-4 rounded-sm p-4 w-40 h-28 flex flex-col justify-between cursor-default shadow-lg hover:shadow-xl hover:shadow-black/50 ${card.color}`}
+          >
             <span className="text-[10px] text-slate-500 font-semibold tracking-wider uppercase leading-tight">{card.title}</span>
             <span className="text-3xl font-light text-white">{card.value}</span>
-          </div>
+          </motion.div>
         ))}
       </div>
 
@@ -149,13 +157,20 @@ export default function DashboardView({
                   else if (trip.status === TripStatus.DRAFT) eta = "Awaiting vehicle";
 
                   return (
-                    <tr key={idx} className="border-b border-slate-800/50 hover:bg-slate-800/20 transition">
-                      <td className="py-4 text-slate-300 font-medium">{formatTripId(trip.id)}</td>
-                      <td className="py-4 text-slate-400">{v?.name || "—"}</td>
-                      <td className="py-4 text-slate-400">{d?.name || "—"}</td>
-                      <td className="py-4">{getTripStatusPill(trip.status)}</td>
-                      <td className="py-4 text-slate-400 text-xs">{eta}</td>
-                    </tr>
+                    <motion.tr
+                      key={trip.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      whileHover={{ backgroundColor: "rgba(30, 41, 59, 0.5)" }}
+                      className="border-b border-slate-800/50 text-slate-300"
+                    >
+                      <td className="py-3 pr-4">{formatTripId(trip.id)}</td>
+                      <td className="py-3 pr-4">{v ? v.name : "—"}</td>
+                      <td className="py-3 pr-4">{d ? d.name : "—"}</td>
+                      <td className="py-3 pr-4">{getTripStatusPill(trip.status)}</td>
+                      <td className="py-3 font-medium text-slate-400">{eta}</td>
+                    </motion.tr>
                   );
                 })}
                 {recentTrips.length === 0 && (
