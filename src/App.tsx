@@ -48,6 +48,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [initialOpenAddDriver, setInitialOpenAddDriver] = useState<boolean>(false);
   const [initialOpenAddTrip, setInitialOpenAddTrip] = useState<boolean>(false);
+  const [initialOpenAddMaintenance, setInitialOpenAddMaintenance] = useState<boolean>(false);
 
   // Global search and navigation filter query state
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -72,6 +73,11 @@ export default function App() {
       setInitialOpenAddTrip(true);
     } else {
       setInitialOpenAddTrip(false);
+    }
+    if (tabId === "maintenance" && subpath === "new") {
+      setInitialOpenAddMaintenance(true);
+    } else {
+      setInitialOpenAddMaintenance(false);
     }
   };
 
@@ -108,6 +114,10 @@ export default function App() {
         setInitialOpenAddTrip(false);
       } else if (path === "/maintenance") {
         setActiveTab("maintenance");
+        setInitialOpenAddMaintenance(false);
+      } else if (path === "/maintenance/new") {
+        setActiveTab("maintenance");
+        setInitialOpenAddMaintenance(true);
       } else if (path === "/fuel-expenses") {
         setActiveTab("fuel-expenses");
       } else if (path === "/reports") {
@@ -742,6 +752,7 @@ export default function App() {
                   activeRole={activeRole}
                   onOpenMaintenance={handleOpenMaintenance}
                   onCloseMaintenance={handleCloseMaintenance}
+                  initialOpenAdd={initialOpenAddMaintenance}
                 />
               )}
 

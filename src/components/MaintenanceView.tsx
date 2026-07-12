@@ -9,6 +9,7 @@ interface MaintenanceViewProps {
   activeRole: Role;
   onOpenMaintenance: (maintenance: any) => Promise<void>;
   onCloseMaintenance: (id: string, cost: number) => Promise<void>;
+  initialOpenAdd?: boolean;
 }
 
 export default function MaintenanceView({
@@ -16,7 +17,8 @@ export default function MaintenanceView({
   vehicles,
   activeRole,
   onOpenMaintenance,
-  onCloseMaintenance
+  onCloseMaintenance,
+  initialOpenAdd
 }: MaintenanceViewProps) {
   const { t } = useLanguage();
   const [filterStatus, setFilterStatus] = useState("ALL");
@@ -28,6 +30,12 @@ export default function MaintenanceView({
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [description, setDescription] = useState("");
   const [estCost, setEstCost] = useState("250");
+
+  React.useEffect(() => {
+    if (initialOpenAdd && vehicles.length > 0) {
+      handleOpenOpenModal();
+    }
+  }, [initialOpenAdd, vehicles]);
 
   // Close Maintenance modal state
   const [showCloseModal, setShowCloseModal] = useState(false);
