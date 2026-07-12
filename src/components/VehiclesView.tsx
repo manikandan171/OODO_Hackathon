@@ -88,13 +88,25 @@ export default function VehiclesView({
     e.preventDefault();
     setError(null);
 
-    if (!regNo || !name || !type || !capacity || !odometer || !cost || !region) {
+    const trimmedRegNo = regNo.trim();
+    if (!trimmedRegNo || !name || !type || !capacity || !odometer || !cost || !region) {
       setError("Please fill out all fields before enrolling.");
       return;
     }
 
+    // Frontend uniqueness check to give fast feedback
+    if (modalMode === "ADD") {
+      const isDuplicate = vehicles.some(
+        (v) => v.registrationNumber.toLowerCase() === trimmedRegNo.toLowerCase()
+      );
+      if (isDuplicate) {
+        setError(`A vehicle with registration number '${trimmedRegNo}' already exists.`);
+        return;
+      }
+    }
+
     const payload = {
-      registrationNumber: regNo,
+      registrationNumber: trimmedRegNo,
       name,
       type,
       maxLoadCapacityKg: Number(capacity),
